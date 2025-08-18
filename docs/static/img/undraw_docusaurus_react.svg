@@ -1,0 +1,9 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#fefce8"/>
+  <circle cx="100" cy="100" r="60" fill="none" stroke="#eab308" stroke-width="3"/>
+  <circle cx="100" cy="100" r="40" fill="none" stroke="#ca8a04" stroke-width="2"/>
+  <circle cx="100" cy="100" r="20" fill="none" stroke="#a16207" stroke-width="2"/>
+  <circle cx="100" cy="100" r="8" fill="#92400e"/>
+  <path d="M60 100 Q100 60 140 100 Q100 140 60 100" fill="#fbbf24" opacity="0.3"/>
+  <text x="100" y="180" text-anchor="middle" font-family="Arial" font-size="12" fill="#92400e">Cost-Effective</text>
+</svg>

@@ -1,0 +1,3 @@
+- name: TODO configure component
+  debug:
+    msg: "configure me"

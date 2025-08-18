@@ -1,0 +1,5 @@
+route:
+  receiver: dev-null
+  group_by: ['alertname','tenant','env','service']
+receivers:
+  - name: dev-null

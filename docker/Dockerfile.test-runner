@@ -1,0 +1,328 @@
+# Test Runner Service for ObservaStack
+# Orchestrates test execution and collects results
+
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    docker.io \
+    postgresql-client \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js for frontend testing
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs
+
+# Create app user
+RUN groupadd -r testrunner && useradd -r -g testrunner testrunner
+
+# Set working directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY <<EOF requirements.txt
+asyncio==3.4.3
+asyncpg==0.29.0
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-xdist==3.6.0
+pytest-html==4.1.1
+pytest-cov==6.0.0
+requests==2.32.3
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.36
+pydantic==2.10.3
+fastapi==0.115.6
+httpx==0.28.1
+docker==7.1.0
+kubernetes==31.0.0
+jinja2==3.1.4
+pyyaml==6.0.2
+rich==13.9.4
+typer==0.15.1
+EOF
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy test runner application
+COPY <<EOF test_runner.py
+#!/usr/bin/env python3
+"""
+ObservaStack Test Runner
+Orchestrates test execution and collects results
+"""
+
+import asyncio
+import asyncpg
+import json
+import os
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional
+import uuid
+
+import httpx
+import typer
+from rich.console import Console
+from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+console = Console()
+app = typer.Typer()
+
+class TestRunner:
+    def __init__(self):
+        self.db_url = os.getenv("TEST_DB_URL", "postgresql://test_user:test_password@test-db:5432/observastack_test")
+        self.frontend_url = os.getenv("FRONTEND_URL", "http://frontend-test:3000")
+        self.bff_url = os.getenv("BFF_URL", "http://bff-test:8000")
+        self.grafana_url = os.getenv("GRAFANA_URL", "http://grafana:3000")
+        
+    async def wait_for_services(self, timeout: int = 300):
+        """Wait for all services to be healthy before running tests."""
+        services = {
+            "Frontend": f"{self.frontend_url}/health",
+            "BFF": f"{self.bff_url}/health",
+            "Grafana": f"{self.grafana_url}/api/health"
+        }
+        
+        console.print("🔍 Waiting for services to be ready...")
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            start_time = time.time()
+            
+            while time.time() - start_time < timeout:
+                all_healthy = True
+                
+                for service_name, health_url in services.items():
+                    try:
+                        response = await client.get(health_url)
+                        if response.status_code == 200:
+                            console.print(f"✅ {service_name} is healthy")
+                        else:
+                            console.print(f"⚠️  {service_name} returned {response.status_code}")
+                            all_healthy = False
+                    except Exception as e:
+                        console.print(f"❌ {service_name} is not ready: {e}")
+                        all_healthy = False
+                
+                if all_healthy:
+                    console.print("🚀 All services are ready!")
+                    return True
+                
+                await asyncio.sleep(10)
+            
+            console.print("❌ Timeout waiting for services to be ready")
+            return False
+    
+    async def create_test_execution(self, test_suite: str, test_name: str) -> str:
+        """Create a new test execution record."""
+        conn = await asyncpg.connect(self.db_url)
+        try:
+            execution_id = str(uuid.uuid4())
+            await conn.execute("""
+                INSERT INTO test_executions (id, test_suite, test_name, start_time, status)
+                VALUES ($1, $2, $3, $4, 'running')
+            """, execution_id, test_suite, test_name, datetime.now(timezone.utc))
+            return execution_id
+        finally:
+            await conn.close()
+    
+    async def update_test_execution(self, execution_id: str, status: str, duration_ms: Optional[int] = None):
+        """Update test execution status and duration."""
+        conn = await asyncpg.connect(self.db_url)
+        try:
+            await conn.execute("""
+                UPDATE test_executions 
+                SET status = $2, end_time = $3, duration_ms = $4, updated_at = $3
+                WHERE id = $1
+            """, execution_id, status, datetime.now(timezone.utc), duration_ms)
+        finally:
+            await conn.close()
+    
+    async def record_test_result(self, execution_id: str, test_case: str, status: str, 
+                               duration_ms: int, error_message: Optional[str] = None):
+        """Record individual test case result."""
+        conn = await asyncpg.connect(self.db_url)
+        try:
+            await conn.execute("""
+                INSERT INTO test_results (execution_id, test_case, status, duration_ms, error_message)
+                VALUES ($1, $2, $3, $4, $5)
+            """, execution_id, test_case, status, duration_ms, error_message)
+        finally:
+            await conn.close()
+    
+    async def run_frontend_tests(self, execution_id: str) -> bool:
+        """Run frontend unit and integration tests."""
+        console.print("🧪 Running frontend tests...")
+        
+        try:
+            # Run unit tests
+            result = subprocess.run([
+                "npm", "test", "--", "--run", "--reporter=json"
+            ], cwd="/workspace/frontend", capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0:
+                await self.record_test_result(execution_id, "frontend_unit_tests", "passed", 0)
+                console.print("✅ Frontend unit tests passed")
+                return True
+            else:
+                await self.record_test_result(execution_id, "frontend_unit_tests", "failed", 0, result.stderr)
+                console.print(f"❌ Frontend unit tests failed: {result.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            await self.record_test_result(execution_id, "frontend_unit_tests", "failed", 0, "Test timeout")
+            console.print("❌ Frontend tests timed out")
+            return False
+        except Exception as e:
+            await self.record_test_result(execution_id, "frontend_unit_tests", "failed", 0, str(e))
+            console.print(f"❌ Frontend tests error: {e}")
+            return False
+    
+    async def run_backend_tests(self, execution_id: str) -> bool:
+        """Run backend unit and integration tests."""
+        console.print("🧪 Running backend tests...")
+        
+        try:
+            # Run pytest with coverage
+            result = subprocess.run([
+                "python", "-m", "pytest", 
+                "--cov=app", 
+                "--cov-report=json",
+                "--json-report", 
+                "--json-report-file=/test-results/backend-results.json",
+                "-v"
+            ], cwd="/workspace/bff", capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0:
+                await self.record_test_result(execution_id, "backend_unit_tests", "passed", 0)
+                console.print("✅ Backend unit tests passed")
+                return True
+            else:
+                await self.record_test_result(execution_id, "backend_unit_tests", "failed", 0, result.stderr)
+                console.print(f"❌ Backend unit tests failed: {result.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            await self.record_test_result(execution_id, "backend_unit_tests", "failed", 0, "Test timeout")
+            console.print("❌ Backend tests timed out")
+            return False
+        except Exception as e:
+            await self.record_test_result(execution_id, "backend_unit_tests", "failed", 0, str(e))
+            console.print(f"❌ Backend tests error: {e}")
+            return False
+    
+    async def run_e2e_tests(self, execution_id: str) -> bool:
+        """Run end-to-end tests."""
+        console.print("🧪 Running E2E tests...")
+        
+        try:
+            # Run Playwright E2E tests
+            result = subprocess.run([
+                "npx", "playwright", "test", 
+                "--reporter=json",
+                "--output=/test-results/e2e-results.json"
+            ], cwd="/workspace/frontend", capture_output=True, text=True, timeout=600)
+            
+            if result.returncode == 0:
+                await self.record_test_result(execution_id, "e2e_tests", "passed", 0)
+                console.print("✅ E2E tests passed")
+                return True
+            else:
+                await self.record_test_result(execution_id, "e2e_tests", "failed", 0, result.stderr)
+                console.print(f"❌ E2E tests failed: {result.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            await self.record_test_result(execution_id, "e2e_tests", "failed", 0, "Test timeout")
+            console.print("❌ E2E tests timed out")
+            return False
+        except Exception as e:
+            await self.record_test_result(execution_id, "e2e_tests", "failed", 0, str(e))
+            console.print(f"❌ E2E tests error: {e}")
+            return False
+
+@app.command()
+async def run_all_tests():
+    """Run all test suites."""
+    runner = TestRunner()
+    
+    # Wait for services to be ready
+    if not await runner.wait_for_services():
+        console.print("❌ Services not ready, aborting tests")
+        sys.exit(1)
+    
+    # Create test execution record
+    execution_id = await runner.create_test_execution("full_suite", "all_tests")
+    start_time = time.time()
+    
+    try:
+        console.print(f"🚀 Starting test execution: {execution_id}")
+        
+        # Run all test suites
+        results = []
+        results.append(await runner.run_backend_tests(execution_id))
+        results.append(await runner.run_frontend_tests(execution_id))
+        results.append(await runner.run_e2e_tests(execution_id))
+        
+        # Calculate overall result
+        all_passed = all(results)
+        duration_ms = int((time.time() - start_time) * 1000)
+        
+        # Update execution record
+        status = "passed" if all_passed else "failed"
+        await runner.update_test_execution(execution_id, status, duration_ms)
+        
+        # Print summary
+        if all_passed:
+            console.print("🎉 All tests passed!")
+        else:
+            console.print("❌ Some tests failed")
+            
+        console.print(f"⏱️  Total execution time: {duration_ms}ms")
+        
+        sys.exit(0 if all_passed else 1)
+        
+    except Exception as e:
+        await runner.update_test_execution(execution_id, "error")
+        console.print(f"💥 Test execution failed: {e}")
+        sys.exit(1)
+
+@app.command()
+async def health_check():
+    """Check health of all services."""
+    runner = TestRunner()
+    healthy = await runner.wait_for_services(timeout=60)
+    sys.exit(0 if healthy else 1)
+
+if __name__ == "__main__":
+    app()
+EOF
+
+# Make test runner executable
+RUN chmod +x test_runner.py
+
+# Create directories
+RUN mkdir -p /test-results /workspace
+RUN chown -R testrunner:testrunner /app /test-results /workspace
+
+# Switch to non-root user
+USER testrunner
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python test_runner.py health-check || exit 1
+
+# Default command
+CMD ["python", "test_runner.py", "run-all-tests"]

@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: ObservaStack BFF API
+  version: 0.1.0
+paths:
+  /api/meta/flags:
+    get:
+      summary: Edition flags
+      responses:
+        '200': { description: OK }
+  /api/auth/login:
+    post:
+      summary: Local login (Community)
+      responses:
+        '200': { description: Tokens }
+  /api/auth/refresh:
+    post:
+      summary: Refresh access token
+      responses:
+        '200': { description: Tokens }
+  /api/auth/jwks:
+    get:
+      summary: JWKS (Community mode)
+      responses:
+        '200': { description: JWKS }
+  /api/search:
+    post:
+      summary: Unified search
+      responses:
+        '200': { description: Search results }
+  /api/search/stream:
+    get:
+      summary: Stream log results (SSE)
+      responses:
+        '200': { description: Stream }
+  /api/alerts:
+    get:
+      summary: List alerts
+      responses:
+        '200': { description: Alerts }
+  /api/alerts/inbox:
+    post:
+      summary: Webhook ingest (Alertmanager/Loki)
+      responses:
+        '202': { description: Accepted }
+  /api/alerts/{id}/ack:
+    post:
+      summary: Acknowledge alert
+      responses:
+        '200': { description: OK }
+  /api/alerts/{id}/assign:
+    post:
+      summary: Assign alert
+      responses:
+        '200': { description: OK }
+  /api/alerts/{id}/resolve:
+    post:
+      summary: Resolve alert
+      responses:
+        '200': { description: OK }
+components: {}

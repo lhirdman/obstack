@@ -1,0 +1,9 @@
+groups:
+- name: delta-anomaly
+  rules:
+  - alert: DiskFullIn4Hours
+    expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[1h], 14400) < 0
+    for: 5m
+    labels: { severity: critical }
+    annotations:
+      summary: "Disk will be full within ~4h on {{ $labels.instance }}"

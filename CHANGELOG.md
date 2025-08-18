@@ -1,0 +1,273 @@
+# Changelog
+
+All notable changes to ObservaStack will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- **Comprehensive Error Handling and Monitoring System** - Complete structured logging, monitoring, and resilience mechanisms for production-ready observability
+- Structured logging configuration with JSON formatting and correlation ID tracking
+- Context-aware logging with tenant, user, and request correlation across all services
+- Performance metrics collection and reporting with Prometheus exposition format
+- Health check endpoints for all services with detailed status and response time monitoring
+- Circuit breaker pattern implementation for protecting against cascading failures
+- Exponential backoff retry mechanism with jitter for transient failure recovery
+- Graceful degradation system with fallback mechanisms and service level management
+- Monitoring middleware for automatic request tracking and performance measurement
+- Comprehensive health check registry with service dependency monitoring
+- Metrics collection system with counters, histograms, and gauges for operational insights
+- Error recovery mechanisms with automatic retry logic and circuit breaker protection
+- Fallback data caching and mock data generation for service unavailability scenarios
+- Resilience testing suite with 25+ test cases covering circuit breaker, retry, and degradation scenarios
+- Integration of monitoring and error handling across all existing services (search, alerts, costs)
+- Prometheus metrics endpoint for application monitoring and alerting
+- Structured error logging with correlation IDs and contextual information
+- Service health monitoring with automatic status detection and reporting
+- Performance monitoring with request duration, throughput, and error rate tracking
+- Admin UI for system configuration and tenant management
+- Tenant management interface with CRUD operations
+- Tenant creation and editing forms with validation
+- Tenant detail view with statistics and health monitoring
+- User management interface (placeholder implementation)
+- System settings configuration panel
+- Audit logs viewer with filtering capabilities
+- System health monitoring dashboard
+- Admin service for API communication
+- Custom hooks for admin operations (useTenants, useAdmin, etc.)
+- Role-based access control for admin features
+- Comprehensive tenant management backend API
+- Tenant service with CRUD operations and caching
+- Data retention policy management
+- Tenant health checking and statistics
+- Multi-tenant isolation and security
+- Unit tests for tenant service and API endpoints
+- Grafana proxy endpoints with tenant-aware authentication
+- Embedded Grafana dashboard component with unified navigation
+- Dashboard browser for discovering and organizing dashboards
+- Unified dashboard view combining browser and embedded dashboards
+- Cost monitoring dashboard integration with OpenCost
+- Cross-signal navigation between observability and cost dashboards
+- Dashboard URL generation with tenant context and authentication
+- Service account management for tenant isolation in Grafana
+- Iframe embedding with proper security headers and CORS handling
+- Dashboard snapshot creation for sharing
+- Responsive design for mobile and desktop dashboard viewing
+- Breadcrumb navigation and back button functionality
+- Time range and refresh controls for embedded dashboards
+- Dashboard categorization (observability vs cost monitoring)
+- Search and filtering capabilities for dashboard discovery
+- **Complete Cost Monitoring Dashboard UI with OpenCost Integration** - Comprehensive frontend for Kubernetes cost monitoring and optimization
+- Cost insights dashboard with real-time cost monitoring and OpenCost data visualization
+- Cost summary cards displaying total cost, resource breakdown, and efficiency metrics with trend indicators
+- Kubernetes cost breakdown charts with pie, bar, and doughnut visualizations for namespace, workload, and service costs
+- Cost trend analysis charts with historical data, forecasting, and multi-resource trend visualization
+- Cost optimization recommendations panel with filtering, sorting, and detailed implementation steps
+- Cost alert management interface with alert creation, resolution, and notification preferences
+- Cost dashboard filters with cluster, namespace, workload selection and time range controls
+- TypeScript type definitions for all OpenCost data models and UI components
+- Cost service API client with comprehensive error handling and streaming support
+- Custom React hooks for cost data management (useCosts, useCostOptimization, useCostAlerts)
+- Real-time cost data updates with auto-refresh and streaming capabilities
+- Cost report generation interface for chargeback and showback reporting
+- Multi-tenant cost data isolation ensuring users only see authorized cost information
+- Responsive design with mobile-friendly cost monitoring interface
+- Interactive cost charts with hover tooltips and drill-down capabilities
+- Cost optimization implementation priority ranking with effort and risk assessment
+- Cost alert creation modal with threshold configuration and notification setup
+- Cost efficiency scoring and waste detection visualization
+- Integration with existing ObservaStack authentication and tenant context
+- **Complete Cost API Endpoints with OpenCost Integration** - Comprehensive REST API for cost monitoring, optimization, and reporting
+- Cost query API endpoints with tenant filtering and time range support for cluster, namespace, and workload-level cost data
+- Cost allocation and chargeback API endpoints for multi-tenant cost reporting and billing
+- Cost alert management API endpoints for threshold monitoring and anomaly detection
+- Cost optimization recommendation API endpoints with rightsizing, scheduling, and storage optimization
+- Comprehensive integration tests for cost API endpoints with 40+ test scenarios covering all functionality
+- Cost report generation API for chargeback, showback, and allocation reports with export capabilities
+- Real-time cost allocation streaming API with Server-Sent Events for live dashboard updates
+- Cost trends analysis API with historical data and forecasting for capacity planning
+- Cost service health monitoring API with OpenCost connectivity and status checks
+- Multi-tenant cost data isolation ensuring users only access authorized cluster and namespace costs
+- Error handling for OpenCost service failures with graceful degradation and retry logic
+- Input validation for all cost API requests with comprehensive Pydantic models
+- Cost API router integration with FastAPI application and authentication middleware
+- OpenCost client dependency injection for proper resource management and connection pooling
+- **OpenCost Integration for Kubernetes Cost Monitoring** - Complete OpenCost client service and cost data models
+- OpenCost client service for cost data retrieval with comprehensive API integration
+- Kubernetes cost data models for namespace, workload, and service cost tracking
+- Multi-tenant cost isolation ensuring proper data separation between tenants
+- Cost alert generation based on OpenCost metrics with threshold monitoring
+- Cost optimization recommendation engine with rightsizing, scheduling, and storage optimizations
+- Cost trend analysis with historical data and forecasting capabilities
+- Comprehensive unit tests for OpenCost integration service with 40+ test cases
+- OpenCost configuration settings in application config with timeout and retry parameters
+- Custom exceptions for OpenCost operations and tenant isolation violations
+- Cost allocation models for CPU, memory, storage, and network resources
+- Cost alert types for budget exceeded, anomaly detection, and efficiency monitoring
+- Implementation effort and risk level classifications for optimization recommendations
+- OpenCost health check endpoints for service monitoring and diagnostics
+- Support for cloud provider cost integration (AWS, GCP, Azure)
+- Chargeback and showback capabilities for multi-tenant cost reporting
+- **OpenCost Integration for SaaS and Enterprise Tiers** - Comprehensive Kubernetes cost monitoring and optimization capabilities
+- OpenCost integration in deployment tiers specification with tier-specific configurations
+- Cost monitoring architecture for SaaS tier with managed OpenCost and cloud provider integration
+- Enterprise tier OpenCost deployment with custom pricing models and air-gap support
+- Multi-tenant cost isolation ensuring users only see authorized namespace and resource costs
+- Cost data integration with unified ObservaStack API and embedded Grafana dashboards
+- Cost anomaly detection and alerting with budget thresholds and optimization recommendations
+- Chargeback and showback capabilities for multi-tenant cost allocation and reporting
+- Cloud provider billing API integration for AWS, GCP, and Azure cost data
+- Custom pricing configuration support for enterprise on-premises deployments
+- OpenCost component validation in tier configuration system
+- Cost accuracy testing and validation framework for billing precision
+- Cross-tier OpenCost testing for upgrade path compatibility and data migration
+- **Complete Alert Management System** - Comprehensive alert ingestion, processing, and management capabilities
+- Alert ingestion and processing backend with webhook endpoints for Alertmanager and generic sources
+- Alert deduplication and grouping logic to prevent duplicate alerts and organize related alerts
+- Alert status management system supporting acknowledge, assign, resolve, and silence operations
+- Comprehensive unit tests for alert processing logic with 27 test cases covering all functionality
+- API endpoints for alert management including filtering, pagination, and statistics
+- Multi-tenant alert isolation ensuring proper data separation between tenants
+- Alert service health checks and performance monitoring capabilities
+- Complete alert management UI with comprehensive filtering, sorting, and bulk actions
+- Alert list view with real-time updates, status badges, and multi-select functionality
+- Alert detail view with full alert information, timeline, and action buttons
+- Alert assignment and resolution workflows with comment support
+- Alert notification preferences interface with channel and rule management
+- Alert filters component with advanced search, time range selection, and active filter display
+- Alert action modal for bulk operations (acknowledge, resolve, assign, silence)
+- Alert card component with severity indicators, status badges, and metadata display
+- Custom React hooks for alert management (useAlerts, useAlertFilters, useAlertSort)
+- Alert service API client with comprehensive error handling and type safety
+- TypeScript type definitions for all alert-related data models and UI components
+- Notification channel management for email, Slack, webhook, PagerDuty, and Teams integration
+- Notification rule configuration with condition-based alert routing
+- Auto-refresh functionality with configurable intervals for real-time alert monitoring
+
+### Added
+- **Responsive UI and User Experience Enhancements** - Complete responsive design system with mobile-first approach and comprehensive UX improvements
+- Responsive layout components with mobile-friendly navigation and touch interactions
+- Grid system with responsive breakpoints and flexible column layouts
+- Container components with responsive padding and max-width constraints
+- Collapsible sidebar with mobile overlay and desktop persistence
+- Touch-friendly button and card components with minimum 44px touch targets
+- Mobile navigation with hamburger menu and slide-out drawer
+- Responsive layout wrapper with automatic mobile/desktop detection
+- Loading skeleton components for all major UI views (cards, tables, lists, text)
+- Error boundary components with retry functionality and detailed error reporting
+- Toast notification system with multiple types (success, error, warning, info)
+- Offline state detection and handling with visual indicators
+- Loading spinner components with multiple sizes and color variants
+- Loading overlay and state management components
+- Comprehensive responsive design tests across different screen sizes
+- Tailwind CSS integration with custom responsive utilities and breakpoints
+- Updated main App component to use new responsive layout system
+- Enhanced UI component library with consistent design patterns
+- Mobile-first CSS approach with progressive enhancement for larger screens
+- Touch-friendly interactions optimized for mobile devices
+- **Cost Optimization Backend Services** - Complete cost optimization analysis and rightsizing recommendation engine
+- Cost optimization service with resource utilization analysis and trend forecasting
+- Rightsizing recommendation engine for CPU, memory, and storage optimization
+- Cost calculation algorithms with configurable pricing models and thresholds
+- Trend analysis with correlation detection and forecasting capabilities
+- Resource utilization metrics collection from Prometheus with tenant isolation
+- Implementation plan generation with phased approach and risk assessment
+- Comprehensive unit tests for cost optimization logic with 15+ test scenarios
+- Insights API endpoints for cost optimization, trend analysis, and resource utilization
+- Cost breakdown analysis with grouping by service, resource type, or time period
+- Streaming recommendations API with Server-Sent Events for real-time updates
+- Benchmarking capabilities for performance comparison against baselines
+- Cost optimization request/response models with comprehensive validation
+- Risk assessment algorithms for optimization recommendations
+- Percentile calculations and statistical analysis for utilization patterns
+- Pearson correlation analysis for metric relationships
+- Error handling and graceful degradation for external service failures
+- Integration with existing Prometheus client for metrics queries
+- Multi-tenant cost isolation and tenant-specific optimization recommendations
+- Configurable cost thresholds and utilization parameters for different environments
+- Unified observability stack specification with comprehensive requirements, design, and implementation tasks
+- Multi-tenant authentication system with JWT support and RBAC
+- Tenant context isolation and role-based access control
+- FastAPI backend with structured error handling and validation
+- React 19.1 frontend with TypeScript 5.9.2 and modern tooling
+- Comprehensive data models for auth, search, alerts, and insights
+- API client with error handling and type safety
+- Time awareness steering rules for accurate date handling
+- Changelog maintenance steering rules for project history tracking
+- Documentation stack decision: Docusaurus 3.6+ for main docs, Redocly for API docs
+- Complete Docusaurus 3.6+ documentation site with ObservaStack branding
+- Comprehensive documentation structure covering getting-started, user-guide, developer-guide, deployment, and troubleshooting
+- Algolia search integration configuration for documentation search
+- Automated documentation deployment pipeline with GitHub Actions
+- Production-ready documentation with performance optimization and accessibility features
+- Documentation standards steering rules for comprehensive project documentation
+- Enhanced implementation tasks with integrated documentation requirements
+- Comprehensive coding standards to prevent redundant code and ensure consistency
+- Complete Keycloak authentication integration in frontend with React context
+- Protected route components with role and permission checking
+- Automatic token storage and refresh mechanism
+- Authentication hooks (useAuth, useUser, useRole, usePermission)
+- User profile mapping from Keycloak tokens to application models
+- Comprehensive authentication documentation and testing suite
+- Backend search service integration with Loki, Prometheus, and Tempo clients
+- Unified search service with cross-signal correlation capabilities
+- Search API endpoints for logs, metrics, and traces with tenant isolation
+- Correlation API for linking related observability signals across data sources
+- Health check endpoints for monitoring data source availability
+- Comprehensive unit tests for all search service components with 51 passing test cases
+- Server-Sent Events (SSE) streaming search API endpoints for real-time results
+- Search result aggregation and formatting with multiple aggregation types (time, service, source, severity)
+- Search statistics and performance metrics endpoints for monitoring and optimization
+- Integration tests for search endpoints with comprehensive mocking and error handling
+- Optimized multi-stage Dockerfiles for test environment with development, test, and production variants
+- Frontend Dockerfile with Node.js 22.12, Playwright E2E testing, and debugging capabilities
+- Backend Dockerfile with Python 3.12, comprehensive test dependencies, and remote debugging support
+- Health check endpoints and probes for container health monitoring
+- Test environment Docker Compose configuration with isolated networks and test-specific services
+- Test results PostgreSQL database with comprehensive schema for test execution tracking
+- Test runner service for orchestrating automated test execution and result collection
+- Synthetic data generator service for creating realistic logs, metrics, and traces
+- Load testing infrastructure with Grafana k6 for performance validation
+- Chaos engineering capabilities with configurable failure injection
+- Test environment documentation with setup, configuration, and troubleshooting guides
+- Enhanced search UI components with advanced filtering and time range selection
+- Cross-signal navigation and correlation capabilities for logs, metrics, and traces
+- Search history and saved searches functionality with local storage persistence
+- Responsive UI components built with Headless UI and Heroicons
+- Storybook integration for component documentation and testing
+- Custom hooks for search functionality and cross-signal navigation
+- Comprehensive TypeScript type definitions for all search-related data models
+- Advanced search form with dynamic filters and time range selector
+- Search results display with source identification and correlation links
+- Time range selector with quick presets and custom date/time selection
+- Search filters component with multiple operators and field suggestions
+- Search history management with save/delete functionality
+- Comprehensive component documentation and usage examples
+- Unit tests for search components with 95%+ coverage
+- Storybook stories for all UI components with interactive examples
+
+### Changed
+- Updated to latest tech stack versions as of August 2025
+- Migrated from React 18 to React 19.1 for improved performance
+- Updated Vite to 7.0.0 with Rolldown integration
+- Updated Node.js requirement to 22.12.0 LTS
+- Enhanced TypeScript configuration with stricter settings
+
+### Fixed
+- Corrected date references to reflect August 2025 timeframe
+- Fixed package.json dependencies to use latest stable versions
+
+## [0.1.0] - 2025-08-15
+
+### Added
+- Initial project structure with Docker Compose observability stack
+- Basic React frontend shell with navigation
+- FastAPI backend-for-frontend with demo endpoints
+- Grafana, Prometheus, Loki, Tempo integration
+- OpenSearch cluster for log analytics
+- RedPanda message queue setup
+- MinIO S3-compatible storage
+- Ansible deployment automation
+- Multi-repository structure with clear separation of concerns

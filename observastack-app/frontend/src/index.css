@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom responsive utilities */
+@layer utilities {
+  .container-responsive {
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .grid-responsive {
+    @apply grid gap-4 sm:gap-6 lg:gap-8;
+  }
+  
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+}
+
+/* Mobile-first responsive breakpoints */
+@layer base {
+  html {
+    @apply text-gray-900 antialiased;
+  }
+  
+  body {
+    @apply bg-gray-50 min-h-screen;
+  }
+}

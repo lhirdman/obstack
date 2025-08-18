@@ -1,0 +1,39 @@
+{
+  "title": "Logs - Triage (Loki)",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Errors over time",
+      "targets": [
+        {
+          "expr": "sum by (service) (count_over_time({level=\"error\"}[$__interval]))"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "table",
+      "title": "Recent error logs",
+      "targets": [
+        {
+          "expr": "{level=\"error\"} | line_format \"{{ .ts }} | {{ .service }} | {{ .level }} | {{ .msg }}\""
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    }
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  }
+}

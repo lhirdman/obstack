@@ -1,0 +1,17 @@
+observastack-team:
+  name: ObservaStack Team
+  title: Core Development Team
+  url: https://github.com/observastack
+  image_url: https://github.com/observastack.png
+
+john-doe:
+  name: John Doe
+  title: Lead Developer
+  url: https://github.com/johndoe
+  image_url: https://github.com/johndoe.png
+
+jane-smith:
+  name: Jane Smith
+  title: DevOps Engineer
+  url: https://github.com/janesmith
+  image_url: https://github.com/janesmith.png

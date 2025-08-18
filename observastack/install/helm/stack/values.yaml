@@ -1,0 +1,7 @@
+frontend:
+  image: registry.example.com/observastack/frontend:v0.1.0
+bff:
+  image: registry.example.com/observastack/bff:v0.1.0
+loki: { enabled: true }
+tempo: { enabled: true }
+prometheus: { enabled: true }

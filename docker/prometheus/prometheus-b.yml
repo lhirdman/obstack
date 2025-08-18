@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    tenant: default
+    env: prod
+
+rule_files:
+  - /etc/prometheus/rules.yml
+  - /etc/prometheus/rules.delta-anomaly.yml
+  - /etc/prometheus/rules.rightsizing.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus-a:9090','prometheus-b:9090']
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    tenant: default
+    env: prod
+    replica: b

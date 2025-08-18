@@ -1,0 +1,16 @@
+stages: [test, build]
+
+test:bff:
+  image: python:3.12-slim
+  stage: test
+  script:
+    - pip install -r bff/requirements.txt
+    - python - <<'PY'
+import importlib; importlib.import_module('fastapi'); print('fastapi ok')
+PY
+
+test:frontend:
+  image: node:20-bullseye
+  stage: test
+  script:
+    - cd frontend && npm i --silent && npm run build

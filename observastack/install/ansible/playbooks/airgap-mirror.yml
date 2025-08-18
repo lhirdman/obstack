@@ -1,0 +1,5 @@
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: TODO mirror required container images and charts
+      debug: { msg: "Mirror images and charts to offline bundle" }

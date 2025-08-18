@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+httpx
+authlib
+python-dotenv
+pydantic
+itsdangerous
+python-jose[cryptography]

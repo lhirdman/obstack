@@ -1,0 +1,135 @@
+/**
+ * ObservaStack Documentation Custom Styles
+ * 
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* ObservaStack Brand Colors */
+:root {
+  --observastack-primary: #1a365d;
+  --observastack-secondary: #2d3748;
+  --observastack-accent: #3182ce;
+  --observastack-success: #38a169;
+  --observastack-warning: #d69e2e;
+  --observastack-error: #e53e3e;
+}
+
+/* Custom navbar styling */
+.navbar {
+  background-color: var(--observastack-primary);
+}
+
+.navbar__title {
+  font-weight: 700;
+  color: white;
+}
+
+.navbar__logo {
+  height: 32px;
+}
+
+/* Custom hero section */
+.hero {
+  background: linear-gradient(135deg, var(--observastack-primary) 0%, var(--observastack-accent) 100%);
+  color: white;
+}
+
+.hero__title {
+  font-size: 3rem;
+  font-weight: 800;
+}
+
+.hero__subtitle {
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+
+/* Code block enhancements */
+.prism-code {
+  border-radius: 8px;
+}
+
+/* Custom admonitions */
+.admonition {
+  border-radius: 8px;
+}
+
+/* Responsive improvements */
+@media screen and (max-width: 996px) {
+  .hero__title {
+    font-size: 2rem;
+  }
+  
+  .hero__subtitle {
+    font-size: 1.2rem;
+  }
+}
+
+/* Documentation-specific styles */
+.markdown h1 {
+  color: var(--observastack-primary);
+}
+
+.markdown h2 {
+  color: var(--observastack-secondary);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+  padding-bottom: 0.5rem;
+}
+
+/* API reference styling */
+.api-method {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  margin-right: 0.5rem;
+}
+
+.api-method--get {
+  background-color: var(--observastack-success);
+  color: white;
+}
+
+.api-method--post {
+  background-color: var(--observastack-accent);
+  color: white;
+}
+
+.api-method--put {
+  background-color: var(--observastack-warning);
+  color: white;
+}
+
+.api-method--delete {
+  background-color: var(--observastack-error);
+  color: white;
+}

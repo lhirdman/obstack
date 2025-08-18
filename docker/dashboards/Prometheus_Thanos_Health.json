@@ -1,0 +1,39 @@
+{
+  "title": "Prometheus / Thanos Health (Starter)",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Active series",
+      "targets": [
+        {
+          "expr": "sum(prometheus_tsdb_head_series)"
+        }
+      ],
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Query latency p95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(prometheus_http_request_duration_seconds_bucket{handler=\"query\"}[5m])) by (le))"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      }
+    }
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  }
+}

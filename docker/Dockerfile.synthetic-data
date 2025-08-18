@@ -1,0 +1,421 @@
+# Synthetic Data Generator for ObservaStack Test Environment
+# Generates realistic logs, metrics, and traces for testing
+
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN groupadd -r datagen && useradd -r -g datagen datagen
+
+# Set working directory
+WORKDIR /app
+
+# Install Python dependencies
+COPY <<EOF requirements.txt
+asyncio==3.4.3
+httpx==0.28.1
+redis==5.2.1
+prometheus-client==0.21.1
+opentelemetry-api==1.28.2
+opentelemetry-sdk==1.28.2
+opentelemetry-exporter-otlp==1.28.2
+faker==33.1.0
+pydantic==2.10.3
+pyyaml==6.0.2
+rich==13.9.4
+typer==0.15.1
+schedule==1.2.2
+EOF
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy synthetic data generator
+COPY <<EOF synthetic_data_generator.py
+#!/usr/bin/env python3
+"""
+ObservaStack Synthetic Data Generator
+Generates realistic logs, metrics, and traces for testing
+"""
+
+import asyncio
+import json
+import random
+import time
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import uuid
+
+import httpx
+import redis
+import typer
+from faker import Faker
+from prometheus_client import CollectorRegistry, Gauge, Counter, Histogram, push_to_gateway
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+
+console = Console()
+fake = Faker()
+
+class SyntheticDataGenerator:
+    def __init__(self):
+        self.loki_url = os.getenv("LOKI_URL", "http://loki:3100")
+        self.prometheus_url = os.getenv("PROMETHEUS_PUSHGATEWAY_URL", "http://prometheus-pushgateway:9091")
+        self.tempo_url = os.getenv("TEMPO_URL", "http://tempo:3200")
+        self.redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+        self.generation_interval = int(os.getenv("DATA_GENERATION_INTERVAL", "30"))
+        self.tenant_count = int(os.getenv("TENANT_COUNT", "3"))
+        self.error_rate = float(os.getenv("ERROR_RATE", "0.05"))
+        
+        # Initialize Redis client
+        try:
+            self.redis_client = redis.from_url(self.redis_url, decode_responses=True)
+            self.redis_client.ping()
+        except Exception as e:
+            console.print(f"⚠️  Redis connection failed: {e}")
+            self.redis_client = None
+        
+        # Service names for realistic data
+        self.services = [
+            "frontend", "bff", "auth-service", "search-service", 
+            "alert-manager", "data-processor", "notification-service"
+        ]
+        
+        # Log levels and their weights
+        self.log_levels = {
+            "DEBUG": 0.4,
+            "INFO": 0.35,
+            "WARN": 0.15,
+            "ERROR": 0.08,
+            "FATAL": 0.02
+        }
+        
+        self.stats = {
+            "logs_generated": 0,
+            "metrics_generated": 0,
+            "traces_generated": 0,
+            "errors_generated": 0
+        }
+    
+    def get_tenant_id(self) -> str:
+        """Get a random tenant ID."""
+        return f"tenant-{random.randint(1, self.tenant_count)}"
+    
+    def get_weighted_log_level(self) -> str:
+        """Get a log level based on weighted distribution."""
+        rand = random.random()
+        cumulative = 0
+        for level, weight in self.log_levels.items():
+            cumulative += weight
+            if rand <= cumulative:
+                return level
+        return "INFO"
+    
+    async def generate_log_entry(self, tenant_id: str, service: str) -> Dict:
+        """Generate a realistic log entry."""
+        level = self.get_weighted_log_level()
+        
+        # Generate different types of log messages based on level
+        if level == "ERROR" or level == "FATAL":
+            messages = [
+                f"Database connection failed: {fake.sentence()}",
+                f"HTTP request timeout: {fake.url()}",
+                f"Authentication failed for user: {fake.user_name()}",
+                f"Service unavailable: {random.choice(self.services)}",
+                f"Memory allocation error: {fake.sentence()}"
+            ]
+            self.stats["errors_generated"] += 1
+        elif level == "WARN":
+            messages = [
+                f"High memory usage detected: {random.randint(80, 95)}%",
+                f"Slow query detected: {random.randint(1000, 5000)}ms",
+                f"Rate limit approaching for tenant: {tenant_id}",
+                f"Cache miss rate high: {random.randint(20, 40)}%"
+            ]
+        else:
+            messages = [
+                f"User {fake.user_name()} logged in successfully",
+                f"Processing request: {fake.uuid4()}",
+                f"Cache hit for key: {fake.word()}",
+                f"Health check passed for {service}",
+                f"Scheduled task completed: {fake.job()}"
+            ]
+        
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        
+        log_entry = {
+            "timestamp": timestamp,
+            "level": level,
+            "service": service,
+            "tenant_id": tenant_id,
+            "message": random.choice(messages),
+            "request_id": str(uuid.uuid4()),
+            "user_id": fake.uuid4() if random.random() > 0.3 else None,
+            "duration_ms": random.randint(10, 2000) if level != "ERROR" else None,
+            "status_code": random.choice([200, 201, 400, 404, 500]) if "HTTP" in random.choice(messages) else None
+        }
+        
+        self.stats["logs_generated"] += 1
+        return log_entry
+    
+    async def send_logs_to_loki(self, logs: List[Dict]):
+        """Send log entries to Loki."""
+        try:
+            # Group logs by labels for Loki streams
+            streams = {}
+            
+            for log in logs:
+                labels = f'{{service="{log["service"]}", level="{log["level"]}", tenant_id="{log["tenant_id"]}"}}'
+                
+                if labels not in streams:
+                    streams[labels] = []
+                
+                # Loki expects [timestamp_ns, log_line]
+                timestamp_ns = str(int(datetime.fromisoformat(log["timestamp"].replace("Z", "+00:00")).timestamp() * 1_000_000_000))
+                log_line = json.dumps({k: v for k, v in log.items() if k != "timestamp"})
+                
+                streams[labels].append([timestamp_ns, log_line])
+            
+            # Prepare Loki push request
+            loki_payload = {
+                "streams": [
+                    {"stream": json.loads(labels.replace("=", ":")), "values": values}
+                    for labels, values in streams.items()
+                ]
+            }
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{self.loki_url}/loki/api/v1/push",
+                    json=loki_payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code != 204:
+                    console.print(f"⚠️  Loki push failed: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            console.print(f"❌ Error sending logs to Loki: {e}")
+    
+    async def generate_metrics(self, tenant_id: str, service: str):
+        """Generate and push metrics to Prometheus."""
+        try:
+            registry = CollectorRegistry()
+            
+            # CPU usage metric
+            cpu_usage = Gauge('cpu_usage_percent', 'CPU usage percentage', 
+                            ['service', 'tenant_id'], registry=registry)
+            cpu_usage.labels(service=service, tenant_id=tenant_id).set(random.uniform(10, 90))
+            
+            # Memory usage metric
+            memory_usage = Gauge('memory_usage_bytes', 'Memory usage in bytes',
+                               ['service', 'tenant_id'], registry=registry)
+            memory_usage.labels(service=service, tenant_id=tenant_id).set(random.randint(100_000_000, 2_000_000_000))
+            
+            # Request counter
+            request_counter = Counter('http_requests_total', 'Total HTTP requests',
+                                    ['service', 'tenant_id', 'status'], registry=registry)
+            for status in ['200', '400', '500']:
+                count = random.randint(1, 100)
+                request_counter.labels(service=service, tenant_id=tenant_id, status=status)._value._value = count
+            
+            # Response time histogram
+            response_time = Histogram('http_request_duration_seconds', 'HTTP request duration',
+                                    ['service', 'tenant_id'], registry=registry)
+            for _ in range(random.randint(10, 50)):
+                response_time.labels(service=service, tenant_id=tenant_id).observe(random.uniform(0.01, 2.0))
+            
+            # Push to Prometheus Pushgateway
+            push_to_gateway(
+                self.prometheus_url.replace("http://", "").replace("https://", ""),
+                job=f'synthetic-data-{service}',
+                registry=registry,
+                grouping_key={'tenant_id': tenant_id}
+            )
+            
+            self.stats["metrics_generated"] += 1
+            
+        except Exception as e:
+            console.print(f"❌ Error generating metrics: {e}")
+    
+    async def generate_trace(self, tenant_id: str, service: str) -> Dict:
+        """Generate a realistic distributed trace."""
+        trace_id = fake.uuid4().replace("-", "")
+        span_id = fake.uuid4().replace("-", "")[:16]
+        
+        # Generate trace with multiple spans
+        spans = []
+        
+        # Root span
+        root_span = {
+            "traceID": trace_id,
+            "spanID": span_id,
+            "operationName": f"{service}.handle_request",
+            "startTime": int(time.time() * 1_000_000),  # microseconds
+            "duration": random.randint(10_000, 500_000),  # microseconds
+            "tags": [
+                {"key": "service.name", "value": service},
+                {"key": "tenant.id", "value": tenant_id},
+                {"key": "http.method", "value": random.choice(["GET", "POST", "PUT", "DELETE"])},
+                {"key": "http.status_code", "value": random.choice([200, 201, 400, 404, 500])},
+                {"key": "user.id", "value": fake.uuid4()}
+            ],
+            "process": {
+                "serviceName": service,
+                "tags": [
+                    {"key": "tenant.id", "value": tenant_id}
+                ]
+            }
+        }
+        spans.append(root_span)
+        
+        # Add child spans for database calls, external services, etc.
+        for i in range(random.randint(1, 4)):
+            child_service = random.choice(["database", "cache", "external-api"])
+            child_span = {
+                "traceID": trace_id,
+                "spanID": fake.uuid4().replace("-", "")[:16],
+                "parentSpanID": span_id,
+                "operationName": f"{child_service}.query",
+                "startTime": root_span["startTime"] + random.randint(1000, 10000),
+                "duration": random.randint(1000, 50000),
+                "tags": [
+                    {"key": "service.name", "value": child_service},
+                    {"key": "tenant.id", "value": tenant_id}
+                ],
+                "process": {
+                    "serviceName": child_service,
+                    "tags": [
+                        {"key": "tenant.id", "value": tenant_id}
+                    ]
+                }
+            }
+            spans.append(child_span)
+        
+        self.stats["traces_generated"] += 1
+        return {"spans": spans}
+    
+    async def send_trace_to_tempo(self, trace: Dict):
+        """Send trace to Tempo (via OTLP or Jaeger format)."""
+        try:
+            # Note: This is a simplified implementation
+            # In practice, you'd use the OpenTelemetry SDK or Jaeger client
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{self.tempo_url}/api/traces",
+                    json=trace,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                if response.status_code not in [200, 202]:
+                    console.print(f"⚠️  Tempo push failed: {response.status_code}")
+                    
+        except Exception as e:
+            console.print(f"❌ Error sending trace to Tempo: {e}")
+    
+    def create_stats_table(self) -> Table:
+        """Create a rich table showing generation statistics."""
+        table = Table(title="Synthetic Data Generation Stats")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Count", style="green")
+        
+        for metric, count in self.stats.items():
+            table.add_row(metric.replace("_", " ").title(), str(count))
+        
+        return table
+    
+    async def generate_data_batch(self):
+        """Generate a batch of synthetic data."""
+        tasks = []
+        
+        # Generate data for each tenant and service
+        for tenant_id in [self.get_tenant_id() for _ in range(self.tenant_count)]:
+            for service in self.services:
+                # Generate logs
+                logs = []
+                for _ in range(random.randint(5, 20)):
+                    log = await self.generate_log_entry(tenant_id, service)
+                    logs.append(log)
+                
+                if logs:
+                    tasks.append(self.send_logs_to_loki(logs))
+                
+                # Generate metrics
+                tasks.append(self.generate_metrics(tenant_id, service))
+                
+                # Generate traces (less frequently)
+                if random.random() < 0.3:  # 30% chance
+                    trace = await self.generate_trace(tenant_id, service)
+                    tasks.append(self.send_trace_to_tempo(trace))
+        
+        # Execute all tasks concurrently
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+app = typer.Typer()
+
+@app.command()
+async def generate():
+    """Start continuous synthetic data generation."""
+    generator = SyntheticDataGenerator()
+    
+    console.print("🚀 Starting synthetic data generation...")
+    console.print(f"📊 Generating data every {generator.generation_interval} seconds")
+    console.print(f"🏢 Tenants: {generator.tenant_count}")
+    console.print(f"⚙️  Services: {len(generator.services)}")
+    
+    with Live(generator.create_stats_table(), refresh_per_second=1) as live:
+        while True:
+            try:
+                await generator.generate_data_batch()
+                live.update(generator.create_stats_table())
+                await asyncio.sleep(generator.generation_interval)
+                
+            except KeyboardInterrupt:
+                console.print("\n👋 Stopping data generation...")
+                break
+            except Exception as e:
+                console.print(f"❌ Error in data generation: {e}")
+                await asyncio.sleep(5)
+
+@app.command()
+async def test():
+    """Generate a single batch of test data."""
+    generator = SyntheticDataGenerator()
+    console.print("🧪 Generating test data batch...")
+    
+    await generator.generate_data_batch()
+    
+    table = generator.create_stats_table()
+    console.print(table)
+    console.print("✅ Test data generation complete")
+
+if __name__ == "__main__":
+    import os
+    app()
+EOF
+
+# Make synthetic data generator executable
+RUN chmod +x synthetic_data_generator.py
+
+# Create directories and set permissions
+RUN mkdir -p /config
+RUN chown -R datagen:datagen /app /config
+
+# Switch to non-root user
+USER datagen
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
+    CMD python synthetic_data_generator.py test || exit 1
+
+# Default command
+CMD ["python", "synthetic_data_generator.py", "generate"]

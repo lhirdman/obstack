@@ -1,0 +1,9 @@
+groups:
+- name: infra
+  rules:
+  - alert: PrometheusDown
+    expr: up{job="prometheus"} == 0
+    for: 2m
+    labels: { severity: critical }
+    annotations:
+      summary: "Prometheus target down"

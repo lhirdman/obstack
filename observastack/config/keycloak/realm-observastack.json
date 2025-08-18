@@ -1,0 +1,1 @@
+{ "realm": "observastack", "enabled": true, "clients": [ { "clientId": "observastack-frontend", "publicClient": true, "redirectUris": ["*"] } ] }

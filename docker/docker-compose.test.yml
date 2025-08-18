@@ -1,0 +1,225 @@
+# Docker Compose configuration for ObservaStack Test Environment
+# This extends the main docker-compose.yml with test-specific services and configurations
+
+version: '3.8'
+
+services:
+  # Frontend application with test optimizations
+  frontend-test:
+    build:
+      context: ../observastack-app/frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: observastack-frontend-test
+    ports:
+      - "3000:3000"
+      - "5678:5678"  # Debugger port
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_KEYCLOAK_URL=http://localhost:8080
+      - VITE_KEYCLOAK_REALM=observastack
+      - VITE_KEYCLOAK_CLIENT_ID=observastack-frontend
+    volumes:
+      - ../observastack-app/frontend:/app
+      - /app/node_modules
+      - frontend-test-cache:/app/.vite
+    networks:
+      - observastack-test
+    depends_on:
+      - bff-test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Backend application with test and debugging capabilities
+  bff-test:
+    build:
+      context: ../observastack-app/bff
+      dockerfile: Dockerfile
+      target: development
+    container_name: observastack-bff-test
+    ports:
+      - "8000:8000"
+      - "5679:5678"  # Debugger port (different from frontend)
+    environment:
+      - ENVIRONMENT=test
+      - TESTING=1
+      - LOKI_URL=http://loki:3100
+      - PROMETHEUS_URL=http://prometheus-a:9090
+      - TEMPO_URL=http://tempo:3200
+      - REDIS_URL=redis://redis:6379
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=observastack
+      - JWT_SECRET_KEY=test-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+    volumes:
+      - ../observastack-app/bff:/app
+      - bff-test-cache:/app/.pytest_cache
+    networks:
+      - observastack-test
+    depends_on:
+      - redis
+      - loki
+      - prometheus-a
+      - tempo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Test results database for storing test execution data
+  test-db:
+    image: postgres:16-alpine
+    container_name: observastack-test-db
+    environment:
+      - POSTGRES_DB=observastack_test
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+      - ./test-db-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    networks:
+      - observastack-test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d observastack_test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Test runner service for orchestrating test execution
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test-runner
+    container_name: observastack-test-runner
+    environment:
+      - TEST_DB_URL=postgresql://test_user:test_password@test-db:5432/observastack_test
+      - FRONTEND_URL=http://frontend-test:3000
+      - BFF_URL=http://bff-test:8000
+      - GRAFANA_URL=http://grafana:3000
+    volumes:
+      - ../observastack-app:/workspace
+      - test-results:/test-results
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - observastack-test
+    depends_on:
+      - test-db
+      - frontend-test
+      - bff-test
+    profiles:
+      - test-execution
+
+  # Synthetic data generator for test data creation
+  synthetic-data-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.synthetic-data
+    container_name: observastack-synthetic-data
+    environment:
+      - LOKI_URL=http://loki:3100
+      - PROMETHEUS_PUSHGATEWAY_URL=http://prometheus-pushgateway:9091
+      - TEMPO_URL=http://tempo:3200
+      - REDIS_URL=redis://redis:6379
+      - DATA_GENERATION_INTERVAL=30
+      - TENANT_COUNT=3
+      - ERROR_RATE=0.05
+    volumes:
+      - synthetic-data-config:/config
+    networks:
+      - observastack-test
+    depends_on:
+      - loki
+      - prometheus-pushgateway
+      - tempo
+      - redis
+    profiles:
+      - data-generation
+
+  # Prometheus Pushgateway for synthetic metrics
+  prometheus-pushgateway:
+    image: prom/pushgateway:v1.9.0
+    container_name: observastack-pushgateway-test
+    ports:
+      - "9091:9091"
+    networks:
+      - observastack-test
+    profiles:
+      - data-generation
+
+  # Load testing service
+  load-tester:
+    image: grafana/k6:0.52.0
+    container_name: observastack-load-tester
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus-a:9090/api/v1/write
+      - TARGET_URL=http://frontend-test:3000
+      - API_URL=http://bff-test:8000
+    volumes:
+      - ./load-tests:/scripts
+      - load-test-results:/results
+    networks:
+      - observastack-test
+    depends_on:
+      - frontend-test
+      - bff-test
+    profiles:
+      - load-testing
+    command: ["run", "/scripts/load-test.js"]
+
+  # Chaos engineering service
+  chaos-monkey:
+    image: quay.io/linki/chaoskube:v0.21.0
+    container_name: observastack-chaos-monkey
+    environment:
+      - CHAOSKUBE_INTERVAL=10m
+      - CHAOSKUBE_DRY_RUN=false
+      - CHAOSKUBE_METRICS_ADDR=0.0.0.0:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - observastack-test
+    profiles:
+      - chaos-testing
+    command: [
+      "--interval=10m",
+      "--dry-run=false",
+      "--metrics-addr=0.0.0.0:8080",
+      "--log-level=info"
+    ]
+
+volumes:
+  frontend-test-cache:
+    driver: local
+  bff-test-cache:
+    driver: local
+  test-db-data:
+    driver: local
+  test-results:
+    driver: local
+  synthetic-data-config:
+    driver: local
+  load-test-results:
+    driver: local
+
+networks:
+  observastack-test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Extend the main observability stack services
+# Include all services from the main docker-compose.yml
+include:
+  - docker-compose.yml

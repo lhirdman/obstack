@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: observastack-bff }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: observastack-bff } }
+  template:
+    metadata: { labels: { app: observastack-bff } }
+    spec:
+      containers:
+        - name: bff
+          image: {{ .Values.bff.image }}
+          ports: [{ containerPort: 8000 }]

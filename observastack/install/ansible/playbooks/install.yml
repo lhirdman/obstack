@@ -1,0 +1,12 @@
+- hosts: all
+  become: yes
+  vars:
+    stack_version: "0.1.0"
+  roles:
+    - role: kong
+    - role: frontend
+    - role: bff
+    - role: grafana
+    - role: loki
+    - role: prometheus
+    - role: tempo

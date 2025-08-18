@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: observastack-frontend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: observastack-frontend } }
+  template:
+    metadata: { labels: { app: observastack-frontend } }
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.frontend.image }}
+          ports: [{ containerPort: 3000 }]

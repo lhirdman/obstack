@@ -1,0 +1,33 @@
+[sources.ingest]
+type = "vector"
+
+[transforms.normalize]
+type = "remap"
+inputs = ["ingest"]
+source = '''
+."@timestamp" = .timestamp || now()
+.log = .message
+.log.level = .level
+.service.name = .service
+.trace.id = .trace_id
+.span.id = .span_id
+.tenant = .tenant ?? "default"
+.env = .env ?? "prod"
+'''
+
+[transforms.route]
+type = "remap"
+inputs = ["normalize"]
+source = '''
+.hot = (.log.level == "warn" || .log.level == "error") || (.log_type in ["audit","security"]) || (.high_value == true)
+'''
+
+[sinks.kafka]
+type = "kafka"
+inputs = ["route"]
+bootstrap_servers = "redpanda-1:9092,redpanda-2:9092,redpanda-3:9092"
+topic = "logs.${TENANT}"
+compression = "zstd"
+acknowledgment = "all"
+[sinks.kafka.encoding]
+  codec = "json"

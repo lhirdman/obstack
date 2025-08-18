@@ -1,0 +1,39 @@
+{
+  "title": "Rightsizing & Savings (K8s)",
+  "panels": [
+    {
+      "type": "table",
+      "title": "CPU rightsizing recommendations",
+      "targets": [
+        {
+          "expr": "k8s_container_cpu_request"
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "table",
+      "title": "Memory rightsizing recommendations",
+      "targets": [
+        {
+          "expr": "k8s_container_mem_request_bytes"
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      }
+    }
+  ],
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  }
+}

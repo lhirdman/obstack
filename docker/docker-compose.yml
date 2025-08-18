@@ -1,0 +1,310 @@
+version: "3.9"
+networks:
+  obsnet: {}
+
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-06-13T22-53-53Z
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [ "miniodata:/data" ]
+    networks: [obsnet]
+
+  mc:
+    image: quay.io/minio/mc:RELEASE.2024-06-13T23-26-02Z
+    depends_on: [minio]
+    entrypoint: ["/bin/sh","-c"]
+    command: >
+      "sleep 3 &&
+       mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} &&
+       mc mb -p local/${BUCKET_LOKI} || true &&
+       mc mb -p local/${BUCKET_OS_SNAPSHOTS} || true &&
+       mc mb -p local/${BUCKET_METRICS} || true &&
+       mc mb -p local/${BUCKET_TRACES} || true"
+    profiles: ["init"]
+    networks: [obsnet]
+
+  redpanda-1:
+    image: redpandadata/redpanda:${REDPANDA_VERSION}
+    command: >
+      redpanda start --overprovisioned --smp 2 --memory 3G --reserve-memory 0M
+      --node-id 1 --check=false
+      --kafka-addr PLAINTEXT://0.0.0.0:9092
+      --advertise-kafka-addr PLAINTEXT://redpanda-1:9092
+      --pandaproxy-addr 0.0.0.0:8082
+      --advertise-pandaproxy-addr redpanda-1:8082
+      --rpc-addr 0.0.0.0:33145
+      --advertise-rpc-addr redpanda-1:33145
+      --seed-server redpanda-1:33145
+    ports: ["9092:9092"]
+    volumes: [ "redpanda1:/var/lib/redpanda/data" ]
+    networks: [obsnet]
+
+  redpanda-2:
+    image: redpandadata/redpanda:${REDPANDA_VERSION}
+    command: >
+      redpanda start --overprovisioned --smp 2 --memory 3G --reserve-memory 0M
+      --node-id 2 --check=false
+      --kafka-addr PLAINTEXT://0.0.0.0:9092
+      --advertise-kafka-addr PLAINTEXT://redpanda-2:9092
+      --pandaproxy-addr 0.0.0.0:8082
+      --advertise-pandaproxy-addr redpanda-2:8082
+      --rpc-addr 0.0.0.0:33145
+      --advertise-rpc-addr redpanda-2:33145
+      --seed-server redpanda-1:33145
+    depends_on: [redpanda-1]
+    volumes: [ "redpanda2:/var/lib/redpanda/data" ]
+    networks: [obsnet]
+
+  redpanda-3:
+    image: redpandadata/redpanda:${REDPANDA_VERSION}
+    command: >
+      redpanda start --overprovisioned --smp 2 --memory 3G --reserve-memory 0M
+      --node-id 3 --check=false
+      --kafka-addr PLAINTEXT://0.0.0.0:9092
+      --advertise-kafka-addr PLAINTEXT://redpanda-3:9092
+      --pandaproxy-addr 0.0.0.0:8082
+      --advertise-pandaproxy-addr redpanda-3:8082
+      --rpc-addr 0.0.0.0:33145
+      --advertise-rpc-addr redpanda-3:33145
+      --seed-server redpanda-1:33145
+    depends_on: [redpanda-1, redpanda-2]
+    volumes: [ "redpanda3:/var/lib/redpanda/data" ]
+    networks: [obsnet]
+
+  opensearch-1:
+    image: opensearchproject/opensearch:${OS_VERSION}
+    environment:
+      - cluster.name=os-cluster
+      - node.name=opensearch-1
+      - discovery.seed_hosts=opensearch-1,opensearch-2,opensearch-3
+      - cluster.initial_master_nodes=opensearch-1,opensearch-2,opensearch-3
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+      - plugins.security.disabled=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    ports: ["9200:9200"]
+    volumes: [ "osdata1:/usr/share/opensearch/data" ]
+    networks: [obsnet]
+
+  opensearch-2:
+    image: opensearchproject/opensearch:${OS_VERSION}
+    environment:
+      - cluster.name=os-cluster
+      - node.name=opensearch-2
+      - discovery.seed_hosts=opensearch-1,opensearch-2,opensearch-3
+      - cluster.initial_master_nodes=opensearch-1,opensearch-2,opensearch-3
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+      - plugins.security.disabled=true
+    volumes: [ "osdata2:/usr/share/opensearch/data" ]
+    depends_on: [opensearch-1]
+    networks: [obsnet]
+
+  opensearch-3:
+    image: opensearchproject/opensearch:${OS_VERSION}
+    environment:
+      - cluster.name=os-cluster
+      - node.name=opensearch-3
+      - discovery.seed_hosts=opensearch-1,opensearch-2,opensearch-3
+      - cluster.initial_master_nodes=opensearch-1,opensearch-2,opensearch-3
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+      - plugins.security.disabled=true
+    volumes: [ "osdata3:/usr/share/opensearch/data" ]
+    depends_on: [opensearch-1, opensearch-2]
+    networks: [obsnet]
+
+  os-dashboards:
+    image: opensearchproject/opensearch-dashboards:${OS_VERSION}
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch-1:9200
+    ports: ["5601:5601"]
+    depends_on: [opensearch-1]
+    networks: [obsnet]
+
+  loki:
+    image: grafana/loki:${LOKI_VERSION}
+    command: -config.file=/etc/loki/config.yaml
+    environment:
+      - MINIO_URL=${MINIO_URL}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${BUCKET_LOKI}
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - lokidata:/data/loki
+    ports: ["3100:3100"]
+    depends_on: [minio, mc]
+    networks: [obsnet]
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    ports: ["3000:3000"]
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning
+      - grafanadata:/var/lib/grafana
+      - ./dashboards:/var/lib/grafana/dashboards
+    depends_on: [loki]
+    networks: [obsnet]
+
+  vector-aggregator:
+    image: timberio/vector:${VECTOR_VERSION}-debian
+    command: ["vector", "-c", "/etc/vector/vector-aggregator.toml"]
+    environment:
+      - TENANT=${TENANT}
+      - ENV=${ENV}
+    volumes:
+      - ./vector-aggregator.toml:/etc/vector/vector-aggregator.toml:ro
+      - vectoraggdata:/var/lib/vector
+    depends_on: [redpanda-1, redpanda-2, redpanda-3]
+    networks: [obsnet]
+
+  prometheus-a:
+    image: prom/prometheus:${PROM_VERSION}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION}"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    volumes:
+      - ./prometheus/prometheus-a.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - ./prometheus/rules.delta-anomaly.yml:/etc/prometheus/rules.delta-anomaly.yml:ro
+      - ./prometheus/rules.rightsizing.yml:/etc/prometheus/rules.rightsizing.yml:ro
+      - promdata_a:/prometheus
+    ports: ["9090:9090"]
+    networks: [obsnet]
+
+  prometheus-b:
+    image: prom/prometheus:${PROM_VERSION}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=${PROM_RETENTION}"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    volumes:
+      - ./prometheus/prometheus-b.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - ./prometheus/rules.delta-anomaly.yml:/etc/prometheus/rules.delta-anomaly.yml:ro
+      - ./prometheus/rules.rightsizing.yml:/etc/prometheus/rules.rightsizing.yml:ro
+      - promdata_b:/prometheus
+    networks: [obsnet]
+
+  thanos-sidecar-a:
+    image: quay.io/thanos/thanos:${THANOS_VERSION}
+    command:
+      - sidecar
+      - --tsdb.path=/prometheus
+      - --prometheus.url=http://prometheus-a:9090
+      - --objstore.config-file=/etc/thanos/objstore.yaml
+    volumes:
+      - promdata_a:/prometheus
+      - ./thanos/objstore.yaml:/etc/thanos/objstore.yaml:ro
+    depends_on: [prometheus-a, minio]
+    networks: [obsnet]
+
+  thanos-sidecar-b:
+    image: quay.io/thanos/thanos:${THANOS_VERSION}
+    command:
+      - sidecar
+      - --tsdb.path=/prometheus
+      - --prometheus.url=http://prometheus-b:9090
+      - --objstore.config-file=/etc/thanos/objstore.yaml
+    volumes:
+      - promdata_b:/prometheus
+      - ./thanos/objstore.yaml:/etc/thanos/objstore.yaml:ro
+    depends_on: [prometheus-b, minio]
+    networks: [obsnet]
+
+  thanos-store:
+    image: quay.io/thanos/thanos:${THANOS_VERSION}
+    command:
+      - store
+      - --objstore.config-file=/etc/thanos/objstore.yaml
+      - --index-cache-size=500MB
+      - --chunk-pool-size=2GB
+    volumes:
+      - ./thanos/objstore.yaml:/etc/thanos/objstore.yaml:ro
+    depends_on: [minio]
+    networks: [obsnet]
+
+  thanos-compact:
+    image: quay.io/thanos/thanos:${THANOS_VERSION}
+    command:
+      - compact
+      - --objstore.config-file=/etc/thanos/objstore.yaml
+      - --wait
+      - --retention.resolution-raw=180d
+      - --retention.resolution-5m=365d
+      - --retention.resolution-1h=730d
+    volumes:
+      - ./thanos/objstore.yaml:/etc/thanos/objstore.yaml:ro
+    depends_on: [minio]
+    networks: [obsnet]
+
+  thanos-query:
+    image: quay.io/thanos/thanos:${THANOS_VERSION}
+    command:
+      - query
+      - --store=thanos-sidecar-a:10901
+      - --store=thanos-sidecar-b:10901
+      - --store=thanos-store:10901
+      - --query.replica-label=replica
+    ports: ["10902:10902"]
+    depends_on: [thanos-sidecar-a, thanos-sidecar-b, thanos-store]
+    networks: [obsnet]
+
+  alertmanager:
+    image: prom/alertmanager:${AM_VERSION}
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    ports: ["9093:9093"]
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [obsnet]
+
+  tempo:
+    image: grafana/tempo:${TEMPO_VERSION}
+    command: ["-config.file=/etc/tempo/config.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/config.yaml:ro
+      - tempodata:/var/tempo
+    ports: ["3200:3200"]
+    depends_on: [minio, mc]
+    networks: [obsnet]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:${OTELCOL_VERSION}
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports: ["4317:4317", "4318:4318"]
+    volumes:
+      - ./opentelemetry/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on: [tempo]
+    networks: [obsnet]
+
+volumes:
+  miniodata: {}
+  redpanda1: {}
+  redpanda2: {}
+  redpanda3: {}
+  osdata1: {}
+  osdata2: {}
+  osdata3: {}
+  grafanadata: {}
+  lokidata: {}
+  vectoraggdata: {}
+  promdata_a: {}
+  promdata_b: {}
+  tempodata: {}

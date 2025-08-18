@@ -1,0 +1,11 @@
+stages: [render, package]
+render:compose:
+  image: alpine:3.20
+  stage: render
+  script: ["echo render compose placeholder"]
+  artifacts: { paths: [install/compose/docker-compose.yaml] }
+package:helm:
+  image: alpine:3.20
+  stage: package
+  script: ["echo package helm placeholder"]
+  artifacts: { paths: [install/helm/stack] }
