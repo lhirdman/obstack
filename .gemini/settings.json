@@ -1,0 +1,59 @@
+{
+  "mcpServers": {
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=Europe/Stockholm"]
+    },
+    "sentry": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sentry",
+        "--auth-token",
+        "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"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+                "-y",
+                "@modelcontextprotocol/server-puppeteer"
+              ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+                "-y",
+                "@executeautomation/playwright-mcp-server"
+            ]
+    },
+    "memory": {
+    "command": "npx",
+    "args": [
+                "-y",
+                "@modelcontextprotocol/server-memory"
+            ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@brave/brave-search-mcp-server"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "BSAbypMRP8aOtZy71n5VkSgAOkq0kLB",
+        "BRAVE_MCP_TRANSPORT": "stdio"
+      }
+    }
+	}
+}

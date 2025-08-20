@@ -3,6 +3,15 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
+  // Exclude internal project directories from the build
+  exclude: [
+    'architecture/**',
+    'stories/**',
+    'prd/**',
+    'prd.md',
+    'architecture.md',
+  ],
+
   title: 'ObservaStack',
   tagline: 'All Your Signals. One View.',
   favicon: 'img/favicon.ico',

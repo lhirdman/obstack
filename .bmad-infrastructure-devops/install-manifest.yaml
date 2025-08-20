@@ -1,13 +1,16 @@
 version: 1.12.0
-installed_at: '2025-08-18T14:28:01.438Z'
+installed_at: '2025-08-18T16:42:56.409Z'
 install_type: expansion-pack
 expansion_pack_id: bmad-infrastructure-devops
 expansion_pack_name: bmad-infrastructure-devops
 ides_setup:
   - cursor
+  - claude-code
+  - trae
   - roo
   - kilo
   - cline
+  - gemini
   - github-copilot
 files:
   - path: .bmad-infrastructure-devops/config.yaml
