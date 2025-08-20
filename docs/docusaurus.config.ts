@@ -3,28 +3,19 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  // Exclude internal project directories from the build
-  exclude: [
-    'architecture/**',
-    'stories/**',
-    'prd/**',
-    'prd.md',
-    'architecture.md',
-  ],
-
   title: 'ObservaStack',
   tagline: 'All Your Signals. One View.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://observastack.github.io',
+  url: 'https://lhirdman.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/observastack/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'observastack', // Usually your GitHub org/user name.
+  organizationName: 'lhirdman', // Usually your GitHub org/user name.
   projectName: 'observastack', // Usually your repo name.
 
   onBrokenLinks: 'throw',
@@ -38,6 +29,18 @@ const config: Config = {
     locales: ['en'],
   },
 
+  exclude: [
+    'architecture/**',
+    'prd/**',
+    'qa/**',
+    'stories/**',
+    'architecture.md',
+    'brownfield-architecture.md',
+    'code-alignment-plan.md',
+    'DOCUMENTATION_CHECKLIST.md',
+    'prd.md',
+  ],
+
   presets: [
     [
       'classic',
@@ -47,7 +50,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/observastack/observastack/tree/main/docs/',
+            'https://github.com/lhirdman/obstack/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -58,7 +61,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/observastack/observastack/tree/main/docs/',
+            'https://github.com/lhirdman/obstack/tree/main/docs/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -89,7 +92,7 @@ const config: Config = {
         },
         {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/observastack/observastack',
+          href: 'https://github.com/lhirdman/obstack',
           label: 'GitHub',
           position: 'right',
         },
@@ -120,11 +123,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub Discussions',
-              href: 'https://github.com/observastack/observastack/discussions',
+              href: 'https://github.com/lhirdman/obstack/discussions',
             },
             {
               label: 'Issues',
-              href: 'https://github.com/observastack/observastack/issues',
+              href: 'https://github.com/lhirdman/obstack/issues',
             },
           ],
         },
@@ -137,12 +140,12 @@ const config: Config = {
             },
             {
               label: 'GitHub',
-              href: 'https://github.com/observastack/observastack',
+              href: 'https://github.com/lhirdman/obstack',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} ObservaStack. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} ObservaStack. Built with Docusaurus.`, 
     },
     prism: {
       theme: prismThemes.github,
@@ -162,7 +165,7 @@ const config: Config = {
       contextualSearch: true,
       
       // Optional: Specify domains where the navigation should occur through window.location instead on history.push
-      externalUrlRegex: 'external\\.com|domain\\.com',
+      externalUrlRegex: 'external\.com|domain\.com',
       
       // Optional: Replace parts of the item URLs from Algolia. Useful when using the same search index for multiple deployments using a different baseUrl
       replaceSearchResultPathname: {

@@ -1,7 +1,7 @@
 # Story 1.3: API Documentation Setup
 
 ## Status
-- Approved
+- Done
 
 ## Story
 - **As a** Developer,
@@ -14,9 +14,9 @@
 3.  A basic "health check" endpoint (`/api/v1/health`) is created and appears in the Redocly documentation.
 
 ## Tasks / Subtasks
-- [ ] Task 1: Configure FastAPI to generate an OpenAPI spec from the code. (AC: #1)
-- [ ] Task 2: Serve API documentation using Redocly at the `/api/docs` endpoint. (AC: #2)
-- [ ] Task 3: Create a `/api/v1/health` endpoint and ensure it appears in the documentation. (AC: #3)
+- [x] Task 1: Configure FastAPI to generate an OpenAPI spec from the code. (AC: #1)
+- [x] Task 2: Serve API documentation using Redocly at the `/api/docs` endpoint. (AC: #2)
+- [x] Task 3: Create a `/api/v1/health` endpoint and ensure it appears in the documentation. (AC: #3)
 
 ## Dev Notes
 - **Dependency:** This story depends on the completion of **Story 1.1**, which sets up the backend application.
@@ -35,11 +35,91 @@
 ## Change Log
 | Date | Version | Description | Author |
 | --- | --- | --- | --- |
+| 2025-08-20 | 1.3 | QA passed. Status set to Done. | Sarah (PO) |
 | 2025-08-19 | 1.1 | Enriched with technical details and tasks. Status set to Approved. | Bob (SM) |
 | 2025-08-19 | 1.0 | Initial draft created from Epic 1. | Sarah (PO) |
 
 ## Dev Agent Record
-*This section is for the development agent.*
+
+### Agent Model Used
+- anthropic/claude-sonnet-4
+
+### Implementation Summary
+All tasks completed successfully. FastAPI backend now serves auto-generated OpenAPI documentation using Redocly with a functional health check endpoint.
+
+### Tasks Completed
+1. **FastAPI OpenAPI Configuration**: Updated main.py with proper OpenAPI settings including title, description, version, and custom OpenAPI URL
+2. **Redocly Documentation**: Configured custom `/api/docs` endpoint serving Redocly-rendered API documentation
+3. **API Structure**: Created proper API directory structure following source-tree.md specifications
+4. **Health Endpoint**: Implemented `/api/v1/health` endpoint with Pydantic response model and proper documentation
+5. **Unit Tests**: Created comprehensive tests for the health endpoint using FastAPI TestClient
+
+### File List
+- `apps/backend/app/main.py` (updated - added OpenAPI config, Redocly endpoint, health router)
+- `apps/backend/app/api/__init__.py` (created)
+- `apps/backend/app/api/v1/__init__.py` (created)
+- `apps/backend/app/api/v1/health.py` (created - health endpoint with Pydantic model)
+- `apps/backend/app/api/v1/test_health.py` (created - unit tests for health endpoint)
+
+### Implementation Details
+- **OpenAPI Configuration**: FastAPI app configured with proper metadata and custom OpenAPI JSON endpoint
+- **Redocly Integration**: Custom HTML endpoint serving Redocly documentation at `/api/docs`
+- **API Versioning**: Proper v1 API structure with router-based organization
+- **Response Models**: Pydantic models for type safety and automatic OpenAPI schema generation
+- **Testing**: Comprehensive unit tests covering both functionality and response model validation
+
+### Completion Notes
+- All acceptance criteria met
+- Code follows snake_case naming conventions per coding standards
+- Proper API structure implemented per source-tree.md
+- Health endpoint returns {"status": "ok"} as specified
+- Documentation automatically generated and accessible at /api/docs
+- Unit tests provide full coverage of health endpoint functionality
+
+### Debug Log References
+No issues encountered during implementation.
+
+### Change Log
+| Date | Version | Description | Author |
+| --- | --- | --- | --- |
+| 2025-08-20 | 1.2 | All tasks completed. API documentation setup complete. | James (Dev) |
 
 ## QA Results
 *This section is for the QA agent.*
+
+## QA Results
+
+### Review Date: 2025-08-20
+
+### Reviewed By: Quinn (Test Architect)
+
+### Code Quality Assessment
+The implementation is clean, well-structured, and follows the project's coding standards. The use of Pydantic models for the response is a good practice, and the API documentation setup is correct.
+
+### Refactoring Performed
+No refactoring was necessary. The code is of high quality.
+
+### Compliance Check
+- Coding Standards: ✓
+- Project Structure: ✓
+- Testing Strategy: ✓
+- All ACs Met: ✓
+
+### Improvements Checklist
+- [x] Resolved test execution issue by running tests from the correct directory with the appropriate `PYTHONPATH`.
+
+### Security Review
+No security concerns were found. The health check endpoint is a public, read-only endpoint with no sensitive information.
+
+### Performance Considerations
+No performance issues were found. The endpoint is lightweight and should respond quickly.
+
+### Files Modified During Review
+None.
+
+### Gate Status
+Gate: PASS → docs/qa/gates/1.3-api-documentation-setup.yml
+
+### Recommended Status
+✓ Ready for Done
+(Story owner decides final status)

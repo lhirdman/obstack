@@ -1,0 +1,29 @@
+schema: 1
+story: "1.2"
+story_title: "Documentation Site Setup"
+gate: PASS
+status_reason: "All acceptance criteria have been met. The Docusaurus site is correctly configured, and the CI/CD pipeline for deployment is sound."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-08-20T13:00:00Z"
+waiver: { active: false }
+top_issues: []
+quality_score: 100
+evidence:
+  tests_reviewed: 0
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'N/A for this story'
+  performance:
+    status: PASS
+    notes: 'N/A for this story'
+  reliability:
+    status: PASS
+    notes: 'Deployment pipeline is robust.'
+  maintainability:
+    status: PASS
+    notes: 'Docusaurus setup is standard and maintainable.'

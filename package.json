@@ -1,0 +1,30 @@
+{
+  "name": "observastack",
+  "version": "1.0.0",
+  "description": "Adds anomaly/delta alerts, rightsizing rules, and dashboards.",
+  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lhirdman/obstack.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lhirdman/obstack/issues"
+  },
+  "homepage": "https://github.com/lhirdman/obstack#readme",
+  "devDependencies": {
+    "nx": "^21.4.0"
+  }
+}
