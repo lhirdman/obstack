@@ -1,52 +1,27 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  access_token: string;
-  token_type: string;
-}
+import { authService, LoginRequest } from '../../services/auth';
 
 interface LoginFormProps {
-  onSuccess?: (token: string) => void;
+  onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
-const loginUser = async (data: LoginFormData): Promise<LoginResponse> => {
-  const response = await fetch('/api/v1/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Login failed');
-  }
-
-  return response.json();
-};
-
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onError }) => {
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
-    mutationFn: loginUser,
+    mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: (data) => {
-      // Store token in localStorage
-      localStorage.setItem('auth_token', data.access_token);
-      onSuccess?.(data.access_token);
+      // Invalidate user query to refetch auth status
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      onSuccess?.();
     },
     onError: (error: Error) => {
       onError?.(error.message);

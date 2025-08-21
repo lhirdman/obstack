@@ -5,17 +5,13 @@ import RegisterForm from './RegisterForm';
 
 const queryClient = new QueryClient();
 
-interface AuthPageProps {
-  onLoginSuccess?: (token: string) => void;
-}
-
-const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
+const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleLoginSuccess = (token: string) => {
+  const handleLoginSuccess = () => {
     setMessage({ type: 'success', text: 'Login successful!' });
-    onLoginSuccess?.(token);
+    // The App component will automatically update now
   };
 
   const handleLoginError = (error: string) => {

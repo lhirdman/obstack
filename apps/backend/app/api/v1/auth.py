@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from jose import JWTError, jwt
 
 from app.db.session import get_db
 from app.db.models import User, Tenant
+from app.core.security import jwt_middleware
 
 router = APIRouter()
 security = HTTPBearer()
@@ -130,29 +131,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Get current user from JWT token."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    try:
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("user_id")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if user is None:
-        raise credentials_exception
-    return user
+    """Get current user from JWT token (from cookie or Authorization header)."""
+    return await jwt_middleware.get_current_user(request, db)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -215,7 +198,7 @@ async def register_user(user_data: UserRegister, db: AsyncSession = Depends(get_
 
 
 @router.post("/login", response_model=Token)
-async def login_user(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login_user(user_data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)):
     """
     Authenticate user and return access token.
     
@@ -250,6 +233,16 @@ async def login_user(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
         expires_delta=access_token_expires
     )
     
+    # Set HttpOnly cookie for web clients
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+        httponly=True,
+        secure=True,  # Use HTTPS in production
+        samesite="lax"
+    )
+    
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -271,3 +264,23 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         roles=current_user.roles if current_user.roles else [],
         created_at=current_user.created_at
     )
+
+
+@router.post("/logout")
+async def logout_user(response: Response):
+    """
+    Logout user by clearing the access token cookie.
+    
+    Clears the HttpOnly cookie containing the JWT access token,
+    effectively logging out the user from web clients.
+    
+    Returns a success message confirming logout.
+    """
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=True,
+        samesite="lax"
+    )
+    
+    return {"message": "Successfully logged out"}

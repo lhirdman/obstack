@@ -1,27 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import AuthPage from './components/auth/AuthPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Dashboard from './components/Dashboard';
+import Navbar from './components/Navbar';
+import { authService } from './services/auth';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authRefetchTrigger, setAuthRefetchTrigger] = useState(0);
 
-  useEffect(() => {
-    // Check if user has a valid token on app load
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // In a real app, you'd validate the token with the backend
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
-  }, []);
+  // Use React Query to check authentication status
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ['auth', 'me', authRefetchTrigger],
+    queryFn: () => authService.getCurrentUser(),
+    retry: false, // Don't retry on auth failures
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+  });
 
-  const handleLoginSuccess = (token: string) => {
-    setIsAuthenticated(true);
+  const isAuthenticated = !isError && !!user;
+
+  const handleLoginSuccess = () => {
+    // Trigger a refetch of the auth status
+    setAuthRefetchTrigger(prev => prev + 1);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setIsAuthenticated(false);
+    // Trigger a refetch to update auth status
+    setAuthRefetchTrigger(prev => prev + 1);
   };
 
   if (isLoading) {
@@ -35,46 +40,55 @@ const App: React.FC = () => {
     );
   }
 
+  import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import AuthPage from './components/auth/AuthPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Dashboard from './components/Dashboard';
+import Navbar from './components/Navbar';
+import { authService } from './services/auth';
+
+const App: React.FC = () => {
+  // Use React Query to check authentication status
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => authService.getCurrentUser(),
+    retry: false, // Don't retry on auth failures
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+  });
+
+  const isAuthenticated = !isError && !!user;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <AuthPage onLoginSuccess={handleLoginSuccess} />;
+    return <AuthPage />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                ObservaStack
-              </h1>
-            </div>
-            <div className="flex items-center">
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
+      <Navbar />
+      <ProtectedRoute
+        fallback={
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Welcome to ObservaStack!
-              </h2>
-              <p className="text-gray-600">
-                You are successfully authenticated. The observability dashboard will be implemented in future stories.
-              </p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Verifying access...</p>
             </div>
           </div>
-        </div>
-      </main>
+        }
+      >
+        <Dashboard />
+      </ProtectedRoute>
     </div>
   );
 };
