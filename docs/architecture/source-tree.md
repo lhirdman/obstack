@@ -16,6 +16,8 @@ obstack/platform/
 │
 ├── docs/                         # Docusaurus documentation site
 │
+├── installer/                    # Community "one-click" installer
+│
 ├── ansible/                      # Ansible playbooks for deployment
 │
 ├── .github/
