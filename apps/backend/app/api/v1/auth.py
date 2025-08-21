@@ -1,4 +1,3 @@
-import os
 import bcrypt
 import json
 from datetime import datetime, timedelta
@@ -11,24 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from jose import JWTError, jwt
 
+from app.core.config import settings, AuthMethod
 from app.db.session import get_db
 from app.db.models import User, Tenant
 from app.core.security import jwt_middleware
 
 router = APIRouter()
 security = HTTPBearer()
-
-# JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-if not SECRET_KEY:
-    if os.getenv("ENVIRONMENT") == "development":
-        # Use a development-only default key with clear warning
-        SECRET_KEY = "dev-secret-key-not-for-production-use"
-        print("WARNING: Using development JWT secret key. Set JWT_SECRET_KEY environment variable for production.")
-    else:
-        raise ValueError("JWT_SECRET_KEY environment variable is required in non-development environments")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 # Pydantic models for request/response
@@ -126,7 +114,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
 
 
@@ -223,7 +211,7 @@ async def login_user(user_data: UserLogin, response: Response, db: AsyncSession 
         )
     
     # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={
             "user_id": user.id,
@@ -237,7 +225,7 @@ async def login_user(user_data: UserLogin, response: Response, db: AsyncSession 
     response.set_cookie(
         key="access_token",
         value=access_token,
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+        max_age=settings.access_token_expire_minutes * 60,  # Convert to seconds
         httponly=True,
         secure=True,  # Use HTTPS in production
         samesite="lax"
@@ -284,3 +272,30 @@ async def logout_user(response: Response):
     )
     
     return {"message": "Successfully logged out"}
+
+
+@router.get("/auth-info")
+async def get_auth_info():
+    """
+    Get authentication configuration information.
+    
+    Returns information about the current authentication method
+    and any relevant configuration for client applications.
+    """
+    auth_info = {
+        "auth_method": settings.auth_method.value,
+        "supports_local_auth": settings.auth_method == AuthMethod.LOCAL,
+        "supports_keycloak_auth": settings.auth_method == AuthMethod.KEYCLOAK,
+    }
+    
+    # Add Keycloak-specific information if using Keycloak auth
+    if settings.auth_method == AuthMethod.KEYCLOAK:
+        auth_info.update({
+            "keycloak_server_url": settings.keycloak_server_url,
+            "keycloak_realm": settings.keycloak_realm,
+            "keycloak_client_id": settings.keycloak_client_id,
+            "keycloak_auth_url": f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid_connect/auth",
+            "keycloak_token_url": f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}/protocol/openid_connect/token",
+        })
+    
+    return auth_info
