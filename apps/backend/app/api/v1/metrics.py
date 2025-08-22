@@ -85,21 +85,12 @@ async def query_metrics(
     """
     logger.info(f"Metrics query request from user {current_user.id} (tenant {current_user.tenant_id})")
     
-    try:
-        result = await metrics_service.query(
-            query=request.query,
-            tenant_id=current_user.tenant_id,
-            time=request.time
-        )
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in metrics query: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
+    result = await metrics_service.query(
+        query=request.query,
+        tenant_id=current_user.tenant_id,
+        time=request.time
+    )
+    return result
 
 
 @router.post("/query_range")
@@ -125,23 +116,14 @@ async def query_range_metrics(
     """
     logger.info(f"Metrics range query request from user {current_user.id} (tenant {current_user.tenant_id})")
     
-    try:
-        result = await metrics_service.query_range(
-            query=request.query,
-            tenant_id=current_user.tenant_id,
-            start=request.start,
-            end=request.end,
-            step=request.step
-        )
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in metrics range query: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
+    result = await metrics_service.query_range(
+        query=request.query,
+        tenant_id=current_user.tenant_id,
+        start=request.start,
+        end=request.end,
+        step=request.step
+    )
+    return result
 
 
 @router.get("/labels/{label}/values")
@@ -163,17 +145,8 @@ async def get_label_values(
     """
     logger.info(f"Label values request for '{label}' from user {current_user.id} (tenant {current_user.tenant_id})")
     
-    try:
-        result = await metrics_service.get_label_values(
-            label=label,
-            tenant_id=current_user.tenant_id
-        )
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error in get label values: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
+    result = await metrics_service.get_label_values(
+        label=label,
+        tenant_id=current_user.tenant_id
+    )
+    return result

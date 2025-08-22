@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.api.v1.health import router as health_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.metrics import router as metrics_router
+from app.core.error_handling import ErrorHandlingMiddleware
 from app.db.session import init_db
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,9 @@ app = FastAPI(
     redoc_url=None,  # We'll create custom Redocly endpoint
     lifespan=lifespan,
 )
+
+# Add error handling middleware (should be added early to catch all exceptions)
+app.add_middleware(ErrorHandlingMiddleware)
 
 # Include API routers
 app.include_router(health_router, prefix="/api/v1", tags=["Health"])

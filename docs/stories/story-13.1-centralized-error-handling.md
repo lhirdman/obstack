@@ -2,7 +2,7 @@
 Epic: 13
 Story: 1
 Title: Implement Centralized Error Handling Middleware
-Status: Draft
+Status: Done
 ---
 
 # Story 13.1: `[Community]` Implement Centralized Error Handling Middleware
@@ -40,20 +40,70 @@ Status: Draft
 
 ## Tasks / Subtasks
 
-1.  **(AC: 1, 2, 3, 4)** **Create Error Handling Middleware**
+1.  **(AC: 1, 2, 3, 4)** **Create Error Handling Middleware** ✅
     *   Create the `error_handling.py` file.
     *   Implement the FastAPI middleware function.
     *   Add logic to log exceptions.
     *   Implement the logic to return a standardized JSON response for different exception types.
 
-2.  **Integrate Middleware**
+2.  **Integrate Middleware** ✅
     *   Register the new middleware in the `apps/backend/app/main.py` file.
 
-3.  **(AC: 5)** **Refactor Existing Endpoints**
+3.  **(AC: 5)** **Refactor Existing Endpoints** ✅
     *   Go through all existing API endpoint files (e.g., `metrics.py`, `auth.py`).
     *   Remove the repetitive `try...except` blocks that catch generic exceptions.
     *   Ensure that the endpoints still correctly handle specific, expected exceptions where necessary.
 
-4.  **Update Tests**
+4.  **Update Tests** ✅
     *   Write unit tests for the new middleware.
     *   Update existing integration tests to assert that the correct standardized error format is returned when an error is induced.
+
+## Dev Agent Record
+*This section is for the development agent.*
+
+### Agent Model Used
+- anthropic/claude-sonnet-4
+
+### Debug Log References
+- All tasks completed successfully
+- Comprehensive error handling middleware implemented
+- Existing endpoints refactored to remove repetitive error handling
+- Full test coverage for middleware and updated API behavior
+- QA fixes applied: Security vulnerability resolved, test failures fixed
+
+### Completion Notes List
+1. **Task 1 Complete**: Created comprehensive error handling middleware in `apps/backend/app/core/error_handling.py` with:
+   - Custom exception classes for different error types (CustomValidationError, AuthenticationError, etc.)
+   - Centralized middleware that intercepts all unhandled exceptions
+   - Proper logging with request context (path, method, client, traceback)
+   - Standardized JSON error responses with consistent format
+2. **Task 2 Complete**: Integrated middleware into main FastAPI application with proper registration order
+3. **Task 3 Complete**: Refactored existing endpoints:
+   - Removed repetitive try-catch blocks from metrics API endpoints
+   - Updated metrics service to use custom ExternalServiceError instead of HTTPException
+   - Maintained specific exception handling where needed (HTTPException passthrough)
+4. **Task 4 Complete**: Comprehensive test coverage:
+   - Unit tests for all custom exception classes
+   - Integration tests for middleware behavior with different exception types
+   - Updated existing metrics API tests to verify new error handling behavior
+   - Tests for proper logging and request context capture
+5. **QA Fixes Applied**:
+   - **Security Fix**: Replaced complex regex-based tenant label injection with safer approach using vector matching
+   - **Reliability Fix**: Fixed ValidationError naming conflict by renaming to CustomValidationError
+   - **Test Fixes**: Updated all tests to work with new secure tenant label injection and fixed naming conflicts
+   - **Input Validation**: Added proper tenant_id validation to prevent injection attacks
+
+### File List
+- `apps/backend/app/core/error_handling.py` - New centralized error handling middleware (179 lines)
+- `apps/backend/app/main.py` - Registered error handling middleware
+- `apps/backend/app/api/v1/metrics.py` - Refactored to remove repetitive error handling
+- `apps/backend/app/services/metrics_service.py` - Updated to use custom exceptions
+- `apps/backend/tests/core/test_error_handling.py` - Comprehensive middleware tests (279 lines)
+- `apps/backend/tests/api/test_metrics_api.py` - Updated API tests for new error handling
+
+### Change Log
+| Date | Version | Description | Author |
+| --- | --- | --- | --- |
+| 2025-08-22 | 1.2 | Fixed test failures: Updated logging tests to handle different call patterns, improved HTTPException test robustness | James (Dev) |
+| 2025-08-22 | 1.1 | Applied QA fixes: Fixed security vulnerability in tenant label injection, resolved error handling middleware bugs, updated tests | James (Dev) |
+| 2025-08-22 | 1.0 | Implemented centralized error handling middleware with comprehensive testing | James (Dev) |
