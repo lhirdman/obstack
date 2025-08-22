@@ -1,5 +1,6 @@
 # Health Monitor Dependencies
-fastapi==0.104.1
+fastapi==0.116.1
+starlette==0.47.2
 uvicorn==0.24.0
 httpx==0.25.2
 psycopg2-binary==2.9.9

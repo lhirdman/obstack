@@ -1,7 +1,7 @@
 # Test Runner Dockerfile
 # Multi-stage build for running E2E and integration tests
 
-FROM node:18-alpine AS frontend-test-base
+FROM node:22-alpine AS frontend-test-base
 WORKDIR /app
 RUN apk add --no-cache chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true

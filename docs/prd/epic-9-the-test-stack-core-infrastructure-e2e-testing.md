@@ -44,3 +44,14 @@
     3.  The test attempts to query for data belonging to Tenant B via the UI and API.
     4.  The test passes if and only if all attempts to access Tenant B's data are correctly denied.
     5.  This test is a blocking requirement for any production release.
+
+**Story 9.5: `[SaaS]` Standardize Test Results as a CI/CD Artifact**
+*   **As a** development team,
+*   **I want** to export test run results as a JSON artifact and have the CI/CD pipeline upload it to persistent storage,
+*   **so that** we can perform historical analysis without compromising the ephemeral nature of the test environment.
+*   **Acceptance Criteria:**
+    1.  A new script (`export-results.py`) is created in the `testing/scripts/` directory.
+    2.  The script can connect to the local `test-results-db`, query all data from the test run, and serialize it into a single, structured JSON file.
+    3.  The main test execution script (`run-all-tests.sh`) is modified to execute the `export-results.py` script as its final step.
+    4.  The CI/CD pipeline configuration is updated to include a new step that archives the JSON artifact to a persistent object store (MinIO/S3).
+    5.  The documentation in `testing/README.md` is updated to describe this new artifact export process.

@@ -63,6 +63,14 @@ The complete test environment is deployed using Docker Compose and includes:
 
 For detailed deployment instructions, see the [Test Environment Guide](../docs/developer-guide/test-environment.md).
 
+### Test Results Persistence
+
+To maintain the ephemeral and isolated nature of our test environment, test results are not stored in a long-term database directly from the test run. Instead, the test runner's final step is to export the complete results of the run into a standardized JSON artifact.
+
+This artifact is then handled by the CI/CD pipeline, which uploads it to a persistent object store (MinIO/S3) for long-term storage and historical analysis. This approach decouples test execution from results storage, enhances security, and ensures perfect reproducibility.
+
+For the detailed rationale behind this decision, see **[ADR-001: Test Results Persistence Strategy](./adr-001-test-results-persistence-strategy.md)**.
+
 ## Continuous Testing Workflow
 
 Testing is an integral part of our CI/CD pipeline to provide rapid feedback.

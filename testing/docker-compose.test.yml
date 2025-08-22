@@ -24,13 +24,235 @@ services:
       - ENVIRONMENT=test
       - DATABASE_URL=postgresql://observastack:observastack@postgres:5432/observastack
       - TEST_DATABASE_URL=postgresql://test_user:test_password@test-results-db:5432/test_results
+      - PROMETHEUS_URL=http://prometheus:9090
+      - LOKI_URL=http://loki:3100
+      - TEMPO_URL=http://tempo:3200
+      - REDIS_URL=redis://redis:6379
+      - OPENSEARCH_URL=http://opensearch:9200
+      - REDPANDA_BROKERS=redpanda:9092
+      - KEYCLOAK_URL=http://keycloak:8080
+      - ALERTMANAGER_URL=http://alertmanager:9093
+      - THANOS_QUERY_URL=http://thanos-query:10904
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
     networks:
       - test-network
+    depends_on:
+      - postgres
+      - prometheus
+      - loki
+      - tempo
+      - redis
+      - opensearch
+      - redpanda
+      - keycloak
+      - alertmanager
+      - thanos-query
+      - otel-collector
 
   postgres:
     extends:
       file: ../docker-compose.yml
       service: postgres
+    networks:
+      - test-network
+
+  # Observability Stack Services
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - test-network
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - test-network
+
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200"
+      - "14268:14268"  # jaeger ingest
+    volumes:
+      - ./config/tempo.yml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    networks:
+      - test-network
+
+  redpanda:
+    image: redpandadata/redpanda:latest
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --smp 1
+      - --memory 1G
+      - --mode dev-container
+      - --default-log-level=info
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - test-network
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.seed_hosts=opensearch-node1
+      - cluster.initial_cluster_manager_nodes=opensearch-node1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      - test-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - test-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
+    networks:
+      - test-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=observastack
+      - KC_DB_PASSWORD=observastack
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_HTTP_ENABLED=true
+    command: start-dev
+    depends_on:
+      - postgres
+    networks:
+      - test-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - test-network
+
+  thanos-sidecar:
+    image: thanosio/thanos:latest
+    ports:
+      - "10901:10901"
+      - "10902:10902"
+    command:
+      - 'sidecar'
+      - '--tsdb.path=/prometheus'
+      - '--prometheus.url=http://prometheus:9090'
+      - '--grpc-address=0.0.0.0:10901'
+      - '--http-address=0.0.0.0:10902'
+    volumes:
+      - prometheus_data:/prometheus
+    depends_on:
+      - prometheus
+    networks:
+      - test-network
+
+  thanos-query:
+    image: thanosio/thanos:latest
+    ports:
+      - "10904:10904"
+    command:
+      - 'query'
+      - '--http-address=0.0.0.0:10904'
+      - '--store=thanos-sidecar:10901'
+    depends_on:
+      - thanos-sidecar
+    networks:
+      - test-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics
+      - "8889:8889"   # Prometheus exporter metrics
+    volumes:
+      - ./config/otel-collector.yml:/etc/otelcol-contrib/otel-collector.yml
+    command: ["--config=/etc/otelcol-contrib/otel-collector.yml"]
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
     networks:
       - test-network
 
@@ -82,7 +304,7 @@ services:
       context: .
       dockerfile: Dockerfile.health-monitor
     environment:
-      - SERVICES_TO_MONITOR=frontend:3000,backend:8000,postgres:5432,test-results-db:5432
+      - SERVICES_TO_MONITOR=frontend:3000,backend:8000,postgres:5432,test-results-db:5432,prometheus:9090,loki:3100,tempo:3200,redpanda:9092,opensearch:9200,redis:6379,grafana:3000,keycloak:8080,alertmanager:9093,thanos-query:10904,otel-collector:8888
       - CHECK_INTERVAL=30
       - HEALTH_DB_URL=postgresql://test_user:test_password@test-results-db:5432/test_results
     depends_on:
@@ -99,6 +321,14 @@ services:
 volumes:
   test_results_data:
   test_reports:
+  prometheus_data:
+  loki_data:
+  tempo_data:
+  redpanda_data:
+  opensearch_data:
+  redis_data:
+  grafana_data:
+  alertmanager_data:
 
 networks:
   test-network:
