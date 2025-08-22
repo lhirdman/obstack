@@ -1,7 +1,10 @@
 /**
  * API client utility that automatically includes credentials for authenticated requests.
- * This ensures that HttpOnly cookies are sent with all API calls.
+ * This ensures that HttpOnly cookies are sent with all API calls for local auth,
+ * and JWT tokens are included for Keycloak auth.
  */
+
+import { authService } from '../services/auth';
 
 interface ApiClientOptions extends RequestInit {
   baseUrl?: string;
@@ -21,12 +24,21 @@ class ApiClient {
     const { baseUrl, ...requestOptions } = options;
     const url = `${baseUrl || this.baseUrl}${endpoint}`;
 
+    // Prepare headers
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...requestOptions.headers as Record<string, string>,
+    };
+
+    // Add JWT token for Keycloak authentication
+    const token = authService.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...requestOptions.headers,
-      },
-      credentials: 'include', // Always include cookies for authentication
+      headers,
+      credentials: 'include', // Always include cookies for local authentication
       ...requestOptions,
     };
 

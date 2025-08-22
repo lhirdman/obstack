@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
+import { configService } from '../../lib/config';
 
 const queryClient = new QueryClient();
 
 const AuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isKeycloakAuth, setIsKeycloakAuth] = useState(false);
+
+  useEffect(() => {
+    const authMethod = configService.getAuthMethod();
+    setIsKeycloakAuth(authMethod === 'keycloak');
+  }, []);
 
   const handleLoginSuccess = () => {
     setMessage({ type: 'success', text: 'Login successful!' });
@@ -67,17 +74,19 @@ const AuthPage: React.FC = () => {
             />
           )}
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={switchMode}
-              className="text-blue-600 hover:text-blue-500 text-sm font-medium"
-            >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"
-              }
-            </button>
-          </div>
+          {!isKeycloakAuth && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={switchMode}
+                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+              >
+                {isLogin
+                  ? "Don't have an account? Sign up"
+                  : "Already have an account? Sign in"
+                }
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </QueryClientProvider>
