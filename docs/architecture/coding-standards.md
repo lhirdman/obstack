@@ -99,6 +99,15 @@ async def query_metrics(request: MetricsQueryRequest):
 -   **E2E Tests**: Test critical user workflows from end-to-end in a browser environment.
 -   **Coverage**: While not a strict metric, all new features must be accompanied by meaningful tests.
 
+## 6. Dependency Management
+
+To maintain a secure and modern codebase, all agents must adhere to the following dependency management process:
+
+-   **Developer Agent (Proactive Check)**: Before beginning implementation of a story, the Developer agent (`James`) MUST perform a "Pre-flight Dependency Check." This involves running `npm outdated` and/or `pip-audit` to identify any outdated or vulnerable dependencies relevant to the story. If significant upgrades are required, the agent will halt and request permission to perform the upgrade as a separate task.
+-   **QA Agent (Verification Check)**: As a final safety net, the QA agent (`Quinn`) will perform a comprehensive dependency and deprecation analysis during every story review. This includes running automated checks for outdated packages, vulnerabilities, and the use of deprecated functions in the code.
+
+This two-layered approach ensures that dependencies are kept current and secure throughout the development lifecycle.
+
 ## Enforcement
 
 These standards are enforced through automated tooling:

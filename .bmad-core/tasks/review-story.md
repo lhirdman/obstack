@@ -77,6 +77,13 @@ required:
 - Outdated dependencies
 - Architecture violations
 
+**G. Dependency and Deprecation Analysis**
+
+- Run `pip-audit` on `requirements.txt` to check for outdated packages and vulnerabilities.
+- Run `npm outdated` on `package.json` to check for outdated Node.js packages.
+- Run linters (`ruff`, `eslint`) with rules enabled to detect the use of deprecated functions and patterns.
+- Report findings in a dedicated section in the QA Results.
+
 ### 3. Active Refactoring
 
 - Refactor code where safe and appropriate

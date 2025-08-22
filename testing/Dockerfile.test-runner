@@ -1,0 +1,49 @@
+# Test Runner Dockerfile
+# Multi-stage build for running E2E and integration tests
+
+FROM node:18-alpine AS frontend-test-base
+WORKDIR /app
+RUN apk add --no-cache chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+FROM python:3.12-slim AS backend-test-base
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM python:3.12-slim AS test-runner
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    nodejs \
+    npm \
+    chromium \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up environment for headless browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Install Python dependencies for test execution
+COPY requirements.test.txt .
+RUN pip install --no-cache-dir -r requirements.test.txt
+
+# Install Node.js dependencies for frontend testing
+COPY package.test.json package.json
+RUN npm install
+
+# Copy test execution scripts
+COPY scripts/ ./scripts/
+RUN chmod +x ./scripts/*.sh
+
+# Create directories for test reports and results
+RUN mkdir -p /app/reports /app/frontend-tests /app/backend-tests
+
+# Default command runs all test suites
+CMD ["./scripts/run-all-tests.sh"]

@@ -55,7 +55,12 @@ core_principles:
 commands:
   - help: Show numbered list of the following commands to allow selection
   - develop-story:
-      - order-of-execution: 'Read (first or next) task→Implement Task and its subtasks→Write tests→Execute validations→Only if ALL pass, then update the task checkbox with [x]→Update story section File List to ensure it lists and new or modified or deleted source file→repeat order-of-execution until complete'
+      - order-of-execution: 'Pre-flight Dependency Check→Read (first or next) task→Implement Task and its subtasks→Write tests→Execute validations→Only if ALL pass, then update the task checkbox with [x]→Update story section File List to ensure it lists and new or modified or deleted source file→repeat order-of-execution until complete'
+      - pre-flight-dependency-check:
+          - CRITICAL: Before writing any code, check for outdated or deprecated dependencies.
+          - CRITICAL: If `requirements.txt` exists, run `pip-audit`.
+          - CRITICAL: If `package.json` exists, run `npm outdated`.
+          - CRITICAL: If major version changes or critical deprecations are found for libraries relevant to the current story, HALT and ask for permission to upgrade them as a separate task.
       - story-file-updates-ONLY:
           - CRITICAL: ONLY UPDATE THE STORY FILE WITH UPDATES TO SECTIONS INDICATED BELOW. DO NOT MODIFY ANY OTHER SECTIONS.
           - CRITICAL: You are ONLY authorized to edit these specific sections of story files - Tasks / Subtasks Checkboxes, Dev Agent Record section and all its subsections, Agent Model Used, Debug Log References, Completion Notes List, File List, Change Log, Status

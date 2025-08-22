@@ -1,0 +1,19 @@
+{
+  "name": "observastack-test-runner",
+  "version": "1.0.0",
+  "description": "Test runner for ObservaStack platform",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:frontend": "cd /app/frontend-tests && npm test",
+    "test:integration": "pytest /app/backend-tests/integration/",
+    "test:all": "./scripts/run-all-tests.sh"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.40.0",
+    "playwright": "^1.40.0",
+    "@axe-core/playwright": "^4.8.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

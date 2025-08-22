@@ -28,9 +28,45 @@ To ensure the application is usable by everyone, including people with disabilit
     -   **Keyboard Navigation**: Can all interactive elements be reached and operated using only the keyboard? Is the focus order logical?
     -   **Screen Reader**: Does the page read logically with a screen reader (e.g., VoiceOver, NVDA)? Are all images and controls properly labeled?
 
+## Test Environment Strategy
+
+### Ephemeral, Always-Current Test Environment
+
+Our test environment follows the **ephemeral, always-current** principle to ensure reliable, consistent testing:
+
+#### Ephemeral Nature
+- **Stateless**: No persistent state between test runs
+- **Disposable**: Can be destroyed and recreated at any time
+- **Isolated**: Completely separate from development and production environments
+- **Clean Slate**: Each deployment starts with a fresh, known state
+
+#### Always-Current
+- **Latest Code**: Always built from the current codebase
+- **Fresh Dependencies**: Dependencies are pulled fresh on each build
+- **Current Configuration**: Uses the latest configuration and environment settings
+- **Up-to-date Tests**: Runs the most recent version of all test suites
+
+#### Benefits
+- **Consistent Results**: Eliminates "works on my machine" issues
+- **Reliable Testing**: No contamination from previous test runs
+- **Easy Debugging**: Known starting state makes issues easier to reproduce
+- **CI/CD Ready**: Perfect for automated testing pipelines
+
+### Test Environment Deployment
+
+The complete test environment is deployed using Docker Compose and includes:
+
+- **Core Application Services**: Frontend, Backend, PostgreSQL
+- **Test-Specific Services**: Test Runner, Test Results Database, Health Monitor
+- **Isolated Network**: Dedicated Docker network for complete isolation
+- **Standardized Commands**: Consistent `docker-compose --build` commands for easy developer use
+
+For detailed deployment instructions, see the [Test Environment Guide](../docs/developer-guide/test-environment.md).
+
 ## Continuous Testing Workflow
 
 Testing is an integral part of our CI/CD pipeline to provide rapid feedback.
 -   **On Every Commit:** All unit and integration tests will be automatically executed.
--   **On Pull Request to `main`:** The full test suite (Unit, Integration, E2E, Accessibility) will run.
+-   **On Pull Request to `main`:** The full test suite (Unit, Integration, E2E, Accessibility) will run in the ephemeral test environment.
 -   **Post-Deployment:** E2E and accessibility tests will run against the staging environment to verify deployment health.
+-   **Test Environment Lifecycle:** Each test run uses a fresh, ephemeral environment that is created, used, and destroyed automatically.

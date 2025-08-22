@@ -41,6 +41,7 @@ const sidebars: SidebarsConfig = {
         'developer-guide/api-reference',
         'developer-guide/contributing',
         'developer-guide/testing',
+        'developer-guide/test-environment',
         'developer-guide/extending',
       ],
     },
