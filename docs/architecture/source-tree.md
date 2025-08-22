@@ -18,6 +18,8 @@ obstack/platform/
 │
 ├── installer/                    # Community "one-click" installer
 │
+├── testing/                      # Test Stack environment and configurations
+│
 ├── ansible/                      # Ansible playbooks for deployment
 │
 ├── .github/

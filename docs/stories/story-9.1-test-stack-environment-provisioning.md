@@ -19,12 +19,20 @@
 - [ ] Task 2: Add the Test Runner, Test Results Database, and Health Monitor services to the Compose file. (AC: #2)
 - [ ] Task 3: Configure all services to run in a dedicated, isolated Docker network. (AC: #3)
 - [ ] Task 4: Document the test environment deployment process in the developer guide. (AC: #4)
+- [ ] Task 5: Document and Script Test Environment Lifecycle
+    *   Update `docs/architecture/testing-strategy.md` with the principle of an ephemeral, always-current test environment.
+    *   Create a new `testing/README.md` containing the standardized `docker-compose --build` commands for easy developer use.
 
 ## Dev Notes
 - The `docker-compose.test.yml` should extend the main `docker-compose.yml` to avoid duplication.
 - The **Test Runner** service will be a container that can execute the E2E and integration test suites.
 - The **Test Results Database** will be a separate PostgreSQL instance for storing test outcomes.
 - The **Health Monitor** service will be a simple application that periodically checks the health of all other services in the test stack.
+
+### File Locations
+- A new `testing/` directory should be created at the root of the monorepo.
+- The `docker-compose.test.yml` file should be placed in this new `testing/` directory.
+- The new `README.md` for the test stack lifecycle should also be placed in the `testing/` directory.
 
 ### Testing
 - The primary test for this story is the successful deployment of the test environment.

@@ -59,6 +59,7 @@ logs/
 junit-*.xml
 e2e/.cache/
 
+
 # TypeScript / JS cache & tooling
 *.tsbuildinfo
 .eslintcache
