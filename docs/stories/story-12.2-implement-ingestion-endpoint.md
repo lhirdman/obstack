@@ -2,7 +2,7 @@
 Epic: 12
 Story: 2
 Title: Implement Public Ingestion Endpoint & Authentication
-Status: Draft
+Status: Approved
 ---
 
 # Story 12.2: `[SaaS]` Implement Public Ingestion Endpoint & Authentication

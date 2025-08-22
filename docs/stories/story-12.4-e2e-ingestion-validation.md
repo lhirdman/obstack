@@ -2,7 +2,7 @@
 Epic: 12
 Story: 4
 Title: End-to-End Integration and Validation
-Status: Draft
+Status: Approved
 ---
 
 # Story 12.4: `[SaaS]` End-to-End Integration and Validation

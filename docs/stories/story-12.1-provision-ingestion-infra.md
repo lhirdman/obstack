@@ -2,7 +2,7 @@
 Epic: 12
 Story: 1
 Title: Provision Core Ingestion Infrastructure (Kong, Redpanda, OpenSearch)
-Status: Draft
+Status: Approved
 ---
 
 # Story 12.1: `[Community]` Provision Core Ingestion Infrastructure (Kong, Redpanda, OpenSearch)

@@ -2,7 +2,7 @@
 Epic: 12
 Story: 3
 Title: Develop Redpanda Consumer & Data Forwarding Service
-Status: Draft
+Status: Approved
 ---
 
 # Story 12.3: `[Community]` Develop Redpanda Consumer & Data Forwarding Service
