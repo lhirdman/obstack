@@ -5,7 +5,8 @@ Configuration settings for the ObservaStack backend application.
 import os
 from enum import Enum
 from typing import Optional
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 class AuthMethod(str, Enum):
@@ -53,6 +54,16 @@ class Settings(BaseSettings):
     keycloak_client_secret: Optional[str] = Field(
         default=None,
         description="Keycloak client secret (optional, for confidential clients)"
+    )
+    
+    # Prometheus Configuration
+    prometheus_url: str = Field(
+        default="http://localhost:9090",
+        description="Prometheus/Thanos API endpoint URL"
+    )
+    prometheus_timeout: int = Field(
+        default=30,
+        description="Timeout for Prometheus API requests in seconds"
     )
     
     # Environment

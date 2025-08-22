@@ -41,7 +41,7 @@ def setup_database():
         
         # Run Alembic upgrade to create tables
         result = subprocess.run(
-            ["alembic", "upgrade", "head"],
+            ["/home/lohi/src/kiro/observastack/apps/backend/venv/bin/alembic", "upgrade", "head"],
             env=env,
             capture_output=True,
             text=True
@@ -57,7 +57,7 @@ def setup_database():
         
         # Clean up: downgrade all migrations
         subprocess.run(
-            ["alembic", "downgrade", "base"],
+            ["/home/lohi/src/kiro/observastack/apps/backend/venv/bin/alembic", "downgrade", "base"],
             env=env,
             capture_output=True,
             text=True

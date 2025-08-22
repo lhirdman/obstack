@@ -50,7 +50,46 @@ This document outlines the mandatory coding standards and best practices for the
 -   **Dependency Injection**: Use FastAPI's `Depends` system to inject services and dependencies into API endpoints.
 -   **Pydantic Models**: Define explicit Pydantic models for all request bodies and responses to ensure data validation.
 -   **Service Layer**: Keep API endpoints thin. All business logic should reside in a separate service layer.
--   **Error Handling**: Use custom exception handlers to return consistent, structured error responses.
+
+### 5. Error Handling
+
+**Rule:** API endpoints (`apps/backend/app/api/`) MUST NOT implement generic `try...except Exception` blocks for the purpose of catching unexpected errors and returning a 500 response.
+
+**Rationale:** The backend application has a centralized error handling middleware (`app/core/error_handling.py`) that automatically catches all unhandled exceptions. This middleware ensures that all unexpected errors are logged consistently and return a standardized JSON error response.
+
+**Correct Usage:**
+
+-   **DO NOT** wrap your entire endpoint logic in a generic `try...except`.
+-   **DO** allow unexpected exceptions to propagate up to the middleware.
+-   **DO** use specific `try...except` blocks only for *expected* exceptions that require unique business logic (e.g., catching a `KeyError` to return a `404 Not Found` instead of a generic `500`).
+
+**Example:**
+
+**WRONG:**
+```python
+@router.post("/query")
+async def query_metrics(request: MetricsQueryRequest):
+    try:
+        # business logic...
+        result = await metrics_service.query(...)
+        return result
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+```
+
+**CORRECT:**
+```python
+@router.post("/query")
+async def query_metrics(request: MetricsQueryRequest):
+    # Let the middleware handle unexpected errors.
+    # The code is cleaner and focuses on the success path.
+    result = await metrics_service.query(...)
+    return result
+```
 
 ## Testing
 
