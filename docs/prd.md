@@ -62,22 +62,24 @@ To maintain focus on the core MVP, the following areas are explicitly **out of s
 *   **FR1: `[Community]`** As a DevOps engineer, I want to access all observability signals (logs, metrics, traces, alerts) through a single unified interface, so that I can efficiently troubleshoot issues without switching between multiple tools.
 *   **FR2: `[Community]`** As a developer, I want to search across logs, metrics, and traces using a unified search interface, so that I can quickly find relevant information during debugging sessions.
 *   **FR3: `[Community]`** As a site reliability engineer, I want to receive and manage alerts from multiple sources in a centralized location, so that I can respond quickly to incidents and maintain system reliability.
-*   **FR4: `[Community]`** As a frontend developer, I want the application to provide a responsive and intuitive user interface, so that users can efficiently navigate and interact with observability data across different devices.
-*   **FR5: `[Community]`** As an API consumer, I want well-documented REST APIs, so that I can integrate the observability platform with other tools and automate workflows.
-*   **FR6: `[Community]`** As a platform operator, I want insights into Kubernetes resource usage and basic cost visibility, so that I can understand my current infrastructure spend.
-*   **FR7: `[SaaS]`** As a platform operator, I want to see historical cost analysis and trends, and receive basic optimization recommendations.
-*   **FR8: `[Enterprise]`** As a platform operator, I want to receive automated cost anomaly alerts and generate chargeback/showback reports for internal accounting.
-*   **FR9: `[Community]`** As an administrator, I want to manage a local set of users (invite, deactivate, assign roles) within the platform, so that my team can securely access the self-hosted instance.
-*   **FR10: `[SaaS]`** As a customer, I want to log in using my existing Google or GitHub account (SSO/OIDC), so that I don't have to manage another set of credentials.
-*   **FR11: `[Enterprise]`** As an enterprise administrator, I want to integrate the platform with our corporate directory (SAML/LDAP), so that our employees can log in with their standard company credentials and we can manage access centrally.
-*   **FR12: `[Community]`** As a managed service provider, I want multi-tenant isolation, so that I can securely serve multiple clients from a single observability platform instance.
-*   **FR13: `[SaaS]`** As an administrator, I want to define custom, fine-grained roles and permissions, so that I can enforce the principle of least privilege for my users.
-*   **FR14: `[Enterprise]`** As a compliance officer, I want to view a detailed, immutable audit log of all user actions and system events, so that I can meet our regulatory requirements.
-*   **FR15: `[SaaS]`** As a new customer, I want my observability instance to be provisioned automatically and be ready for data ingestion within minutes of signing up.
-*   **FR16: `[Enterprise]`** As a system administrator, I want to deploy the entire platform into our on-premise data center or private cloud (VPC), including air-gapped environments.
-*   **FR17: `[Enterprise]`** As an enterprise administrator, I want to configure the platform to use our existing corporate data storage and backup solutions.
-*   **FR18: `[SaaS]`** As a Pro plan customer, I want to access to email and chat support for troubleshooting and questions.
-*   **FR19: `[Enterprise]`** As an Enterprise customer, I want to access to a dedicated support channel and a guaranteed Service Level Agreement (SLA) for uptime.
+*   **FR4: `[Community]`** As a platform operator, I want a robust and scalable pipeline to ingest logs from various sources (e.g., applications, servers, containers), so that all relevant data is available for analysis in the platform.
+*   **FR5: `[Community]`** As a frontend developer, I want the application to provide a responsive and intuitive user interface, so that users can efficiently navigate and interact with observability data across different devices.
+*   **FR6: `[Community]`** As an API consumer, I want well-documented REST APIs, so that I can integrate the observability platform with other tools and automate workflows.
+*   **FR7: `[Community]`** As a platform operator, I want insights into Kubernetes resource usage and basic cost visibility, so that I can understand my current infrastructure spend.
+*   **FR8: `[SaaS]`** As a platform operator, I want to see historical cost analysis and trends, and receive basic optimization recommendations.
+*   **FR9: `[Enterprise]`** As a platform operator, I want to receive automated cost anomaly alerts and generate chargeback/showback reports for internal accounting.
+*   **FR10: `[Community]`** As an administrator, I want to manage a local set of users (invite, deactivate, assign roles) within the platform, so that my team can securely access the self-hosted instance.
+*   **FR11: `[SaaS]`** As a customer, I want to log in using my existing Google or GitHub account (SSO/OIDC), so that I don't have to manage another set of credentials.
+*   **FR12: `[Enterprise]`** As an enterprise administrator, I want to integrate the platform with our corporate directory (SAML/LDAP), so that our employees can log in with their standard company credentials and we can manage access centrally.
+*   **FR13: `[Community]`** As a managed service provider, I want multi-tenant isolation, so that I can securely serve multiple clients from a single observability platform instance.
+*   **FR14: `[SaaS]`** As an administrator, I want to define custom, fine-grained roles and permissions, so that I can enforce the principle of least privilege for my users.
+*   **FR15: `[Enterprise]`** As a compliance officer, I want to view a detailed, immutable audit log of all user actions and system events, so that I can meet our regulatory requirements.
+*   **FR16: `[SaaS]`** As a new customer, I want my observability instance to be provisioned automatically and be ready for data ingestion within minutes of signing up.
+*   **FR17: `[Enterprise]`** As a system administrator, I want to deploy the entire platform into our on-premise data center or private cloud (VPC), including air-gapped environments.
+*   **FR18: `[Enterprise]`** As an enterprise administrator, I want to configure the platform to use our existing corporate data storage and backup solutions.
+*   **FR19: `[SaaS]`** As a Pro plan customer, I want to access to email and chat support for troubleshooting and questions.
+*   **FR20: `[Enterprise]`** As an Enterprise customer, I want to access to a dedicated support channel and a guaranteed Service Level Agreement (SLA) for uptime.
+*   **FR21: `[SaaS]`** As a customer, I want to push telemetry data from my external environment to a secure, tenant-aware endpoint, so that I can monitor all my applications and infrastructure in one place.
 
 ### Non-Functional Requirements
 
@@ -87,8 +89,9 @@ This section defines the specific, measurable quality attributes of the system. 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Performance** | **NFR-P1** | API Response Time | 95th Percentile (p95) latency for core API endpoints (e.g., query, login) | < 300ms | Community |
 | | **NFR-P2** | Frontend Page Load | Largest Contentful Paint (LCP) for main dashboards | < 1.5 seconds | Community |
-| | **NFR-P3** | Data Ingestion Lag | Time from event generation to visibility in UI | < 15 seconds | Community |
-| | **NFR-P4** | Scalability | Concurrent users supported with p95 < 300ms | 500 users | SaaS |
+| | **NFR-P3** | Data Query Lag | Time from event generation to visibility in UI | < 15 seconds | Community |
+| | **NFR-P4** | Log Ingestion Lag | Time from agent collection to visibility in Redpanda | < 2 seconds | Community |
+| | **NFR-P5** | Scalability | Concurrent users supported with p95 < 300ms | 500 users | SaaS |
 | **Reliability**| **NFR-R1** | System Availability | Uptime of the core platform services | 99.5% | SaaS |
 | | **NFR-R2** | System Availability | Uptime of the core platform services | 99.95% | Enterprise |
 | | **NFR-R3** | Recovery Time | Recovery Time Objective (RTO) after critical failure | < 4 hours | SaaS |
@@ -96,6 +99,7 @@ This section defines the specific, measurable quality attributes of the system. 
 | **Security** | **NFR-S1** | Tenant Isolation | Automated tests proving zero cross-tenant data access | 100% pass rate | Community |
 | | **NFR-S2** | Vulnerability Scan | Critical vulnerabilities in container images or dependencies | Zero | Community |
 | | **NFR-S3** | Authentication | Password hashing algorithm | bcrypt (cost=12) | Community |
+| | **NFR-S4** | All incoming data via the push ingestion endpoint must be authenticated via a tenant-specific token/key. | Unauthenticated request rejection rate | 100% | SaaS |
 | **Usability** | **NFR-U1** | Accessibility | WCAG Compliance Level | AA 2.1 | Community |
 | | **NFR-U2** | Local Install | Time from `docker-compose up` to running application | < 5 minutes | Community |
 | **Maintainability**| **NFR-M1**| Code Quality | Code coverage from automated tests | > 80% | Community |
@@ -213,6 +217,8 @@ The platform's quality and reliability will be ensured by a comprehensive, paral
 *   **Epic 8: Advanced Enterprise Features:** Implement remaining enterprise-grade features like fine-grained RBAC and audit logging.
 *   **Epic 9: The Test Stack - Core Infrastructure & E2E Testing:** Build the foundational test environment and the initial suite of end-to-end tests for the features built in Epics 2-5.
 *   **Epic 10: The Test Stack - Advanced Testing (Load & Chaos):** Implement the load testing and chaos engineering capabilities.
+*   **Epic 11: Community Installer & Self-Hosted Experience:** Streamline and simplify the self-hosting and installation process for the Community Edition to drive adoption.
+*   **Epic 12: Data Collection and Ingestion Pipeline:** Build the scalable, multi-tenant data ingestion pipeline to receive, process, and store logs, metrics, and traces from external customer environments.
 
 ## Epic 1: Project Foundation & Documentation Infrastructure
 
@@ -660,6 +666,75 @@ The platform's quality and reliability will be ensured by a comprehensive, paral
     2.  The dashboard queries the Test Results Database to display historical trends for E2E, load, and other tests.
     3.  The dashboard visualizes key metrics like test pass/fail rates, performance regressions, and test suite duration.
     4.  The system can automatically generate and email a daily or weekly quality report.
+
+## Epic 11: Community Installer & Self-Hosted Experience
+
+**Epic Goal:** To provide a simple, "one-click" Docker-based installer for the free, open-source community tier of ObservaStack, enabling users to easily deploy and run the entire platform on their own infrastructure.
+
+### Stories for Epic 11
+
+**Story 11.1: `[Community]` Create "One-Click" Docker Installer**
+*   **As a** new user of the open-source Community edition,
+*   **I want** a single command to download, configure, and run the entire ObservaStack platform,
+*   **so that** I can get started with the platform quickly and easily without complex setup.
+*   **Acceptance Criteria:**
+    1.  A new `installer/` directory is created in the root of the monorepo.
+    2.  The `installer/` directory contains a `docker-compose.yml` file that defines all the services required to run the Community edition of ObservaStack (e.g., frontend, backend, postgres, grafana, prometheus, loki, tempo).
+    3.  A `install.sh` script is created in the `installer/` directory that:
+        *   Checks for Docker and Docker Compose prerequisites.
+        *   Pulls the latest Docker images for all services.
+        *   Initializes any necessary configurations.
+        *   Starts all services using `docker-compose up -d`.
+    4.  A `README.md` file is included in the `installer/` directory with clear, simple instructions on how to use the `install.sh` script.
+
+## Epic 12: Data Collection and Ingestion Pipeline
+
+**Epic Goal:** To design, build, and deploy a scalable, multi-tenant data ingestion pipeline capable of receiving, processing, and storing logs, metrics, and traces from external customer environments, ensuring data is securely isolated and available for querying within the Obstack platform via both Loki and OpenSearch.
+
+### Stories for Epic 12
+
+**Story 12.1: `[Community]` Provision Core Ingestion Infrastructure (Kong, Redpanda, OpenSearch)**
+*   **As a** Platform Engineer,
+*   **I want** the core infrastructure for the ingestion pipeline to be defined and deployable,
+*   **so that** we have a stable foundation for building the data flow.
+*   **Acceptance Criteria:**
+    1.  Kong is configured with the necessary routes for the public OTLP and Prometheus `remote_write` endpoints.
+    2.  A Redpanda cluster is added to the Docker Compose setup.
+    3.  An OpenSearch service is added to the Docker Compose setup.
+    4.  All new services are integrated into the project's startup and shutdown scripts.
+
+**Story 12.2: `[SaaS]` Implement Public Ingestion Endpoint & Authentication**
+*   **As a** Backend Developer,
+*   **I want** to implement the secure, public-facing API endpoint for data ingestion,
+*   **so that** customers can begin sending their telemetry data to the platform.
+*   **Acceptance Criteria:**
+    1.  A new FastAPI endpoint is created to handle incoming OTLP and Prometheus `remote_write` requests.
+    2.  The endpoint validates a tenant-specific, token-based authentication header.
+    3.  Upon successful authentication, the endpoint enriches the incoming data with a `tenant_id` label/attribute.
+    4.  The enriched data is published to the appropriate topic in Redpanda.
+    5.  Unauthenticated requests are rejected with a `401 Unauthorized` error.
+
+**Story 12.3: `[Community]` Develop Redpanda Consumer & Data Forwarding Service**
+*   **As a** Backend Developer,
+*   **I want** to create a consumer service that processes data from Redpanda and forwards it to the correct backend storage,
+*   **so that** ingested data becomes available for querying.
+*   **Acceptance Criteria:**
+    1.  A new FastAPI service is created that subscribes to the telemetry topics in Redpanda.
+    2.  The service correctly parses incoming data.
+    3.  Metrics are forwarded to Prometheus.
+    4.  Traces are forwarded to Tempo.
+    5.  Logs are dual-written to both Loki and OpenSearch into tenant-specific indices.
+
+**Story 12.4: `[SaaS]` End-to-End Integration and Validation**
+*   **As a** QA Engineer,
+*   **I want** to test the entire data ingestion pipeline from end to end,
+*   **so that** we can verify that the system is working correctly and securely.
+*   **Acceptance Criteria:**
+    1.  A test script is created that uses an OpenTelemetry Collector to send sample logs, metrics, and traces to the public endpoint.
+    2.  An E2E test logs into the UI as the corresponding tenant.
+    3.  The test verifies that the sent metrics are queryable in the Metrics view.
+    4.  The test verifies that the sent traces are viewable in the Traces view.
+    5.  The test verifies that the sent logs are searchable in both the Logs view (Loki) and via an advanced search feature that queries OpenSearch.
 
 ## Checklist Results Report
 

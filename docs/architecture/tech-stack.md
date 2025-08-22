@@ -31,6 +31,9 @@ This document outlines the official technology stack for the Obstack platform. A
 |---|---|---|---|
 | Identity | Keycloak | 22.x+ | Identity and Access Management for multi-tenancy. |
 | API Gateway | Kong | 3.4+ | Manages, secures, and routes all API traffic. |
+| Data Ingestion | OpenTelemetry Collector | latest | Primary endpoint for receiving customer telemetry data (OTLP). |
+| Log Collection | Vector | latest | High-performance agent for collecting and forwarding log data. |
+| Data Streaming | Redpanda | latest | Kafka-compatible streaming platform for the log ingestion pipeline. |
 | Deployment | Ansible | latest | Configuration management and application deployment. |
 | Metrics | Prometheus & Thanos | latest | Core engine for metrics collection and long-term storage. |
 | Logs | Loki | latest | Core engine for log aggregation. |

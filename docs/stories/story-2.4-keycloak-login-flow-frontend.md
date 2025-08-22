@@ -1,7 +1,7 @@
 # Story 2.4: Keycloak Login Flow Frontend
 
 ## Status
-- Approved
+- Done
 
 ## Story
 - **As an** Enterprise user,

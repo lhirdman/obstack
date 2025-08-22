@@ -40,8 +40,9 @@ This diagram illustrates the primary components of the system and their interact
 
 ```mermaid
 graph TD
-    subgraph "External Systems"
-        ControlPlane[obstack/control-plane<br>(Billing, Signup, Mgmt)]
+    subgraph "Data Sources"
+        AppLogs[Instrumented Apps]
+        SystemLogs[VMs / Pods / Files]
     end
 
     subgraph "User"
@@ -49,6 +50,12 @@ graph TD
     end
 
     subgraph "Obstack Platform (AWS VPC)"
+        subgraph "Collection & Ingestion"
+            Otel[OTEL Collector]
+            Vector[Vector Agent]
+            Redpanda[Redpanda<br>(Data Streaming)]
+        end
+
         subgraph "Gateway Layer"
             Kong[API Gateway<br>(Kong)]
         end
@@ -76,12 +83,19 @@ graph TD
         end
     end
 
+    %% Data Flow
+    AppLogs -- Telemetry --> Otel
+    SystemLogs -- Logs --> Vector
+    Otel -- Unified Telemetry --> Redpanda
+    Vector -- Raw Logs --> Redpanda
+    Redpanda -- Topic --> Backend
+
+    %% User Flow
     User --> Frontend
     User -- API Calls --> Kong
-    ControlPlane -- Provisioning API --> Kong
-
     Kong --> Backend
 
+    %% Backend Connections
     Backend --> DB
     Backend --> Cache
     Backend --> Identity
@@ -90,10 +104,87 @@ graph TD
     Backend --> Tempo
     Backend --> OpenCost
 
+    %% Storage Connections
     Loki --> S3
     Prometheus -- Long Term --> S3
     Tempo --> S3
-Architectural and Design Patterns
+```
+
+### Log Ingestion Pipeline
+
+To ensure a scalable and reliable data pipeline for logs, the architecture includes a streaming data platform (Redpanda) and dedicated collection agents (Vector and the OTEL Collector).
+
+1.  **Collection:**
+    *   **Vector:** Deployed as a node-level agent, Vector is responsible for collecting logs from system files, syslog, and other non-application sources.
+    *   **OTEL Collector:** Used as a sidecar or gateway, the OTEL Collector receives structured telemetry (logs, metrics, traces) from applications that are instrumented with OpenTelemetry SDKs.
+
+2.  **Streaming:**
+    *   Both Vector and the OTEL Collector forward their data into **Redpanda**, a Kafka-compatible streaming platform. This decouples the collection layer from the processing layer, providing a durable buffer that can handle backpressure and ensure data is not lost.
+
+3.  **Processing & Storage:**
+    *   The **FastAPI Backend** includes a consumer service that reads from the appropriate topics in Redpanda.
+    *   This service is responsible for parsing, enriching (e.g., adding `tenant_id`), and validating the log data before forwarding it to its final destination, **Loki**, for long-term storage and querying.
+
+This decoupled pipeline provides a robust foundation for handling high-volume log data, which is critical for the platform's reliability.
+
+### Push-Based Telemetry Ingestion
+
+For SaaS and Enterprise customers, a push-based model is essential for receiving telemetry from their external environments. The platform will provide a secure, tenant-aware endpoint to receive this data.
+
+1.  **Primary Protocol: OpenTelemetry Protocol (OTLP)**
+    *   **Rationale:** OTLP is the vendor-neutral standard for telemetry data and is the native protocol for OpenTelemetry. It supports logs, metrics, and traces in a unified format, making it the ideal primary ingestion method.
+    *   Customers will configure their OpenTelemetry Collectors or instrumented applications to export data via OTLP/HTTP to a dedicated endpoint on the Obstack platform.
+
+2.  **Secondary Protocol: Prometheus `remote_write`**
+    *   **Rationale:** To support the vast ecosystem of existing Prometheus deployments, the platform will also expose a Prometheus `remote_write` compatible endpoint.
+    *   Customers can configure their Prometheus instances to forward metrics to this endpoint, allowing for seamless integration without requiring a full switch to the OTEL Collector.
+
+#### Ingestion Flow Diagram
+
+```mermaid
+graph TD
+    subgraph "Customer Environment"
+        CustomerApp[Customer Application]
+        CustomerPrometheus[Customer Prometheus]
+        CustomerOtel[Customer OTEL Collector]
+    end
+
+    subgraph "Obstack Platform"
+        IngestionGateway[API Gateway<br>(Kong)]
+        AuthService[Backend BFF<br>(Authentication & Enrichment)]
+        OtelCollector[Obstack OTEL Collector]
+        
+        subgraph "Observability Backend"
+            Prometheus[Prometheus]
+            Loki[Loki]
+            Tempo[Tempo]
+        end
+    end
+
+    %% Data Flow
+    CustomerApp -- OTLP --> CustomerOtel
+    CustomerOtel -- OTLP/HTTP --> IngestionGateway
+    CustomerPrometheus -- remote_write --> IngestionGateway
+
+    IngestionGateway -- Tenant-Specific Route --> AuthService
+
+    AuthService -- Authenticates & Enriches --> OtelCollector
+
+    OtelCollector -- Forwards --> Prometheus
+    OtelCollector -- Forwards --> Loki
+    OtelCollector -- Forwards --> Tempo
+```
+
+#### Authentication and Multi-Tenancy
+
+1.  **Endpoint:** All incoming data will be sent to a single, secure endpoint managed by the API Gateway (Kong).
+2.  **Authentication:** The **Backend BFF** is the first point of contact. It is responsible for authenticating each incoming request, likely via a unique API key or token provided to the tenant.
+3.  **Enrichment:** Upon successful authentication, the BFF will enrich the telemetry data with the correct `tenant_id` label or attribute. This is a critical step for ensuring data isolation.
+4.  **Forwarding:** The enriched data is then forwarded to the internal **OpenTelemetry Collector**, which acts as the central processing and routing hub. The collector will then route the data to the appropriate backend service (Loki, Prometheus, or Tempo) based on its type.
+
+This push-based architecture provides a secure and scalable method for ingesting data from diverse customer environments while maintaining strict multi-tenancy.
+
+### Architectural and Design Patterns
 
 Overall Architecture: Backend-for-Frontend (BFF) to provide a tailored API for our UI, and Open Core to separate community and commercial features.
 
