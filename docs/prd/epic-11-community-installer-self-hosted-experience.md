@@ -1,10 +1,10 @@
-# Epic 11: Community Installer
+# Epic 11: Community Installer & Self-Hosted Experience
 
 **Epic Goal:** To provide a simple, "one-click" Docker-based installer for the free, open-source community tier of ObservaStack, enabling users to easily deploy and run the entire platform on their own infrastructure.
 
 ## Stories for Epic 11
 
-### Story 11.1: `[Community]` Create "One-Click" Docker Installer
+**Story 11.1: `[Community]` Create "One-Click" Docker Installer**
 *   **As a** new user of the open-source Community edition,
 *   **I want** a single command to download, configure, and run the entire ObservaStack platform,
 *   **so that** I can get started with the platform quickly and easily without complex setup.

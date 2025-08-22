@@ -9,6 +9,7 @@ This document outlines the official technology stack for the Obstack platform. A
 | Language | TypeScript | 5.9.2 | Primary language for the frontend application. |
 | Framework | React | 19.1.0 | Core UI library for building the component-based interface. |
 | Build Tool | Vite | 7.0.0 | Frontend development server and production bundler. |
+| Routing | React Router | 7.0+ | Client-side routing and navigation. |
 | State Management | TanStack Query | 5.84.1 | Manages server state, caching, and data synchronization. |
 | Styling | Tailwind CSS | 3.4+ | Utility-first CSS framework for rapid UI development. |
 | Testing (Unit) | Vitest & RTL | latest | Vite-native unit and component testing framework. |

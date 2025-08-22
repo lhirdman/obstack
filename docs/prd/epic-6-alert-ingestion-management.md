@@ -4,7 +4,7 @@
 
 ## Stories for Epic 6
 
-### Story 6.1: `[Community]` Backend Alert Ingestion
+**Story 6.1: `[Community]` Backend Alert Ingestion**
 *   **As a** Backend Developer,
 *   **I want** to create a webhook endpoint that can receive alerts from Prometheus Alertmanager,
 *   **so that** we can ingest alerts into the Obstack platform.
@@ -15,7 +15,7 @@
     4.  The endpoint handles alert grouping and deduplication.
     5.  The webhook is documented in the API reference (Redocly) and the Docusaurus developer guide.
 
-### Story 6.2: `[Community]` Alert Management API
+**Story 6.2: `[Community]` Alert Management API**
 *   **As a** Backend Developer,
 *   **I want** to provide API endpoints for viewing and managing alerts,
 *   **so that** the frontend can display and interact with alert data.
@@ -26,7 +26,7 @@
     4.  The endpoints are protected and require a valid JWT.
     5.  All endpoints are documented in Redocly.
 
-### Story 6.3: `[Community]` Frontend UI for Alert Management
+**Story 6.3: `[Community]` Frontend UI for Alert Management**
 *   **As a** site reliability engineer,
 *   **I want** to view and manage all of my alerts in a centralized dashboard,
 *   **so that** I can track and respond to incidents efficiently.
@@ -38,7 +38,7 @@
     5.  From the detail view, users with appropriate permissions can change the alert's status (e.g., Acknowledge, Resolve).
     6.  The Alerts view is documented in the Docusaurus user guide.
 
-### Story 6.4: `[SaaS]` Advanced Alert Notifications
+**Story 6.4: `[SaaS]` Advanced Alert Notifications**
 *   **As a** Pro plan customer,
 *   **I want** to configure Obstack to send alert notifications to external systems like Slack or PagerDuty,
 *   **so that** my team can be notified of issues through our existing on-call workflows.

@@ -4,7 +4,7 @@
 
 ## Stories for Epic 3
 
-### Story 3.1: `[Community]` Backend Integration with Prometheus
+**Story 3.1: `[Community]` Backend Integration with Prometheus**
 *   **As a** Backend Developer,
 *   **I want** the backend to query a Prometheus/Thanos instance based on the user's tenant,
 *   **so that** we can securely serve metrics data to the frontend.
@@ -15,7 +15,7 @@
     4.  The endpoint is protected and requires a valid JWT.
     5.  The new endpoint is documented in the API reference (Redocly).
 
-### Story 3.2: `[Community]` Backend Integration with Tempo
+**Story 3.2: `[Community]` Backend Integration with Tempo**
 *   **As a** Backend Developer,
 *   **I want** the backend to query a Tempo instance for trace data,
 *   **so that** we can securely serve distributed traces to the frontend.
@@ -26,7 +26,7 @@
     4.  The endpoint is protected and requires a valid JWT.
     5.  The new endpoint is documented in the API reference (Redocly).
 
-### Story 3.3: `[Community]` Frontend UI for Metrics Visualization
+**Story 3.3: `[Community]` Frontend UI for Metrics Visualization**
 *   **As a** DevOps engineer,
 *   **I want** to visualize metrics from my services in the Obstack UI,
 *   **so that** I can monitor the health and performance of my applications.
@@ -37,7 +37,7 @@
     4.  The view includes the global time-range selector.
     5.  A user guide for the Metrics view is added to the Docusaurus site.
 
-### Story 3.4: `[Community]` Frontend UI for Trace Visualization
+**Story 3.4: `[Community]` Frontend UI for Trace Visualization**
 *   **As a** developer,
 *   **I want** to view distributed traces in a waterfall diagram,
 *   **so that** I can debug performance issues and understand service dependencies.

@@ -4,7 +4,7 @@
 
 ## Stories for Epic 4
 
-### Story 4.1: `[Community]` Backend Integration with Loki
+**Story 4.1: `[Community]` Backend Integration with Loki**
 *   **As a** Backend Developer,
 *   **I want** the backend to query a Loki instance using tenant-isolated LogQL queries,
 *   **so that** we can securely serve log data to the frontend.
@@ -15,7 +15,7 @@
     4.  The endpoint is protected and requires a valid JWT.
     5.  The new endpoint is documented in the API reference (Redocly).
 
-### Story 4.2: `[Community]` Frontend UI for Log Search and Visualization
+**Story 4.2: `[Community]` Frontend UI for Log Search and Visualization**
 *   **As a** developer,
 *   **I want** to search and filter logs using a powerful query interface,
 *   **so that** I can quickly find the information I need to debug issues.
@@ -26,7 +26,7 @@
     4.  The view includes the global time-range selector and supports "live-tailing" of logs.
     5.  The Logs view is documented in the Docusaurus user guide.
 
-### Story 4.3: `[Community]` Log Line Interaction and Details
+**Story 4.3: `[Community]` Log Line Interaction and Details**
 *   **As a** developer,
 *   **I want** to expand log lines to see detailed metadata,
 *   **so that** I can get the full context for a specific log event.

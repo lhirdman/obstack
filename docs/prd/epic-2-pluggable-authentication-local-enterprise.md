@@ -4,7 +4,7 @@
 
 ## Stories for Epic 2
 
-### Story 2.1: `[Community]` Local User Registration and Login
+**Story 2.1: `[Community]` Local User Registration and Login**
 *   **As a** new user of the self-hosted Community edition,
 *   **I want** to be able to register an account and log in with a username and password,
 *   **so that** I can access the platform securely.
@@ -15,7 +15,7 @@
     4.  The frontend provides a clean UI for registration and login forms.
     5.  All API documentation is updated in Redocly.
 
-### Story 2.2: `[Community]` Session Management and Protected Routes
+**Story 2.2: `[Community]` Session Management and Protected Routes**
 *   **As a** logged-in user,
 *   **I want** the application to keep me logged in and protect sensitive areas,
 *   **so that** I have a secure and seamless user experience.
@@ -26,7 +26,7 @@
     4.  The frontend implements "protected route" logic, redirecting unauthenticated users from dashboards back to the login page.
     5.  A "Logout" button is available that clears the JWT and redirects to the login page.
 
-### Story 2.3: `[Enterprise]` Keycloak Integration Backend
+**Story 2.3: `[Enterprise]` Keycloak Integration Backend**
 *   **As a** Backend Developer,
 *   **I want** to integrate the backend with Keycloak for OIDC-based authentication,
 *   **so that** we can support Enterprise customers with SSO requirements.
@@ -37,7 +37,7 @@
     4.  The system can map Keycloak roles to internal application roles.
     5.  The implementation is documented in the developer guide on the Docusaurus site.
 
-### Story 2.4: `[Enterprise]` Keycloak Login Flow Frontend
+**Story 2.4: `[Enterprise]` Keycloak Login Flow Frontend**
 *   **As an** Enterprise user,
 *   **I want** to be redirected to my company's login page (via Keycloak) to authenticate,
 *   **so that** I can use my standard corporate credentials to access the platform.

@@ -33,6 +33,11 @@ This document outlines the mandatory coding standards and best practices for the
 -   **Line Length**: Maximum 120 characters.
 -   **Imports**: Group and sort imports. Use absolute imports for modules within the application.
 
+## Code-Level Documentation
+
+-   **TypeScript/React**: Use **JSDoc** comments for all exported functions, classes, and complex types. This is especially important for reusable components and hooks.
+-   **Python/FastAPI**: Use **Google-style docstrings** for all public modules, functions, classes, and methods.
+
 ## Component Design (React)
 
 -   **Functional Components**: Use function components with hooks exclusively. Class components are not permitted.

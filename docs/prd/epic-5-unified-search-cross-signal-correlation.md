@@ -4,7 +4,7 @@
 
 ## Stories for Epic 5
 
-### Story 5.1: `[Community]` Backend Unified Search Service
+**Story 5.1: `[Community]` Backend Unified Search Service**
 *   **As a** Backend Developer,
 *   **I want** to create a unified search service that queries Loki, Prometheus, and Tempo simultaneously,
 *   **so that** I can provide a single entry point for all user search queries.
@@ -15,7 +15,7 @@
     4.  The service aggregates the results from all three sources into a single, structured JSON response, clearly identifying the source of each result.
     5.  The new endpoint is fully documented in Redocly.
 
-### Story 5.2: `[Community]` Frontend Unified Search Bar and Results UI
+**Story 5.2: `[Community]` Frontend Unified Search Bar and Results UI**
 *   **As a** DevOps engineer,
 *   **I want** to use a single search bar on the main dashboard to query all my observability data at once,
 *   **so that** I can quickly find relevant information without knowing which tool to check first.
@@ -26,7 +26,7 @@
     4.  Each result in the list is clearly marked with its type (e.g., with an icon and text) and links to the appropriate detailed view (e.g., the Logs view).
     5.  The feature is documented in the Docusaurus user guide.
 
-### Story 5.3: `[Community]` Cross-Signal Correlation Logic
+**Story 5.3: `[Community]` Cross-Signal Correlation Logic**
 *   **As a** developer debugging an issue,
 *   **I want** to be able to jump from a specific trace to the logs and metrics related to it,
 *   **so that** I can correlate different signals to find the root cause of a problem faster.

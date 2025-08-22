@@ -4,7 +4,7 @@
 
 ## Stories for Epic 8
 
-### Story 8.1: `[Enterprise]` Fine-Grained Role-Based Access Control (RBAC)
+**Story 8.1: `[Enterprise]` Fine-Grained Role-Based Access Control (RBAC)**
 *   **As an** enterprise administrator,
 *   **I want** to create custom roles with specific, fine-grained permissions,
 *   **so that** I can enforce the principle of least privilege across my organization.
@@ -15,7 +15,7 @@
     4.  Permissions are enforced at both the API gateway and the backend service layer.
     5.  This feature is protected by an `[Enterprise]` feature flag and documented in the Docusaurus admin guide.
 
-### Story 8.2: `[Enterprise]` Detailed Audit Logging
+**Story 8.2: `[Enterprise]` Detailed Audit Logging**
 *   **As a** compliance officer,
 *   **I want** to view a detailed, immutable audit log of all significant user and system actions,
 *   **so that** I can meet our regulatory and security audit requirements.
@@ -27,7 +27,7 @@
     5.  A new "Audit Log" view is added to the Admin section of the UI.
     6.  This feature is protected by an `[Enterprise]` feature flag.
 
-### Story 8.3: `[Enterprise]` Air-Gapped Deployment Support
+**Story 8.3: `[Enterprise]` Air-Gapped Deployment Support**
 *   **As an** enterprise administrator in a secure environment,
 *   **I want** the Ansible playbooks to support a fully air-gapped deployment,
 *   **so that** I can run the platform in a network with no internet access.

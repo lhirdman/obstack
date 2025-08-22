@@ -4,7 +4,7 @@
 
 ## Stories for Epic 9
 
-### Story 9.1: `[SaaS]` Test Stack Environment Provisioning
+**Story 9.1: `[SaaS]` Test Stack Environment Provisioning**
 *   **As a** platform developer,
 *   **I want** the test environment, including the full Obstack application and core test services, to be deployable via a single command,
 *   **so that** I can easily spin up a complete, isolated environment for validation.
@@ -14,7 +14,7 @@
     3.  All services are configured to run in a dedicated, isolated Docker network.
     4.  The deployment process is documented in the developer guide.
 
-### Story 9.2: `[SaaS]` Synthetic Data Generation Service
+**Story 9.2: `[SaaS]` Synthetic Data Generation Service**
 *   **As a** QA engineer,
 *   **I want** a service that can generate realistic, multi-tenant logs, metrics, and traces,
 *   **so that** I can populate the test environment with high-quality test data on demand.
@@ -24,7 +24,7 @@
     3.  The generated data is realistic enough to test the functionality of the search and visualization features.
     4.  The service can generate data that simulates common error conditions and anomalies.
 
-### Story 9.3: `[SaaS]` E2E Test Suite for Authentication and Core UI
+**Story 9.3: `[SaaS]` E2E Test Suite for Authentication and Core UI**
 *   **As a** platform developer,
 *   **I want** an automated E2E test suite that validates the core authentication and UI navigation,
 *   **so that** I can ensure these critical user workflows never break.
@@ -34,7 +34,7 @@
     3.  Tests are created for: Local user registration, Local user login, Keycloak user login, and navigation between the main views (Logs, Metrics, etc.).
     4.  The E2E tests are integrated into the CI/CD pipeline and run automatically.
 
-### Story 9.4: `[SaaS]` E2E Test Suite for Multi-Tenant Isolation
+**Story 9.4: `[SaaS]` E2E Test Suite for Multi-Tenant Isolation**
 *   **As a** security engineer,
 *   **I want** an automated E2E test that proves a user from one tenant cannot access data from another,
 *   **so that** I can be confident in our core security model.

@@ -4,7 +4,7 @@
 
 ## Stories for Epic 7
 
-### Story 7.1: `[Community]` Backend Integration with OpenCost
+**Story 7.1: `[Community]` Backend Integration with OpenCost**
 *   **As a** Backend Developer,
 *   **I want** the backend to query the OpenCost API for Kubernetes cost data,
 *   **so that** we can expose cost allocation metrics to the frontend.
@@ -15,7 +15,7 @@
     4.  A new API endpoint is created (e.g., `/api/v1/costs/current`) to serve basic, current cost data.
     5.  The new endpoint is protected, tenant-isolated, and documented in Redocly.
 
-### Story 7.2: `[Community]` Frontend UI for Basic Cost Visibility
+**Story 7.2: `[Community]` Frontend UI for Basic Cost Visibility**
 *   **As a** platform operator,
 *   **I want** to see a dashboard showing my current Kubernetes costs broken down by namespace,
 *   **so that** I can understand where my cloud spend is going.
@@ -26,7 +26,7 @@
     4.  The feature is available to all tiers.
     5.  The basic dashboard is documented in the Docusaurus user guide.
 
-### Story 7.3: `[SaaS]` Historical Cost Analysis
+**Story 7.3: `[SaaS]` Historical Cost Analysis**
 *   **As a** Pro plan customer,
 *   **I want** to view historical cost data and trends,
 *   **so that** I can understand how my costs are changing over time.
@@ -37,7 +37,7 @@
     4.  The UI allows users to compare costs across different time periods.
     5.  This feature is protected by a `[SaaS]` feature flag.
 
-### Story 7.4: `[Enterprise]` Advanced Cost Reporting and Anomaly Detection
+**Story 7.4: `[Enterprise]` Advanced Cost Reporting and Anomaly Detection**
 *   **As an** Enterprise customer,
 *   **I want** to generate chargeback/showback reports and be alerted to cost anomalies,
 *   **so that** I can perform internal cost accounting and proactively manage unexpected spend.

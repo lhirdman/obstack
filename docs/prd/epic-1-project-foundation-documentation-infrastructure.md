@@ -4,7 +4,7 @@
 
 ## Stories for Epic 1
 
-### Story 1.1: `[Community]` Monorepo and CI/CD Setup
+**Story 1.1: `[Community]` Monorepo and CI/CD Setup**
 *   **As a** Developer,
 *   **I want** the `obstack/platform` monorepo to be initialized with frontend and backend apps,
 *   **so that** I have a structured foundation for building the platform.
@@ -14,7 +14,7 @@
     3.  A `docker-compose.yml` file is created that builds and runs the empty frontend and backend containers.
     4.  The project includes a root `README.md` with basic setup instructions.
 
-### Story 1.2: `[Community]` Documentation Site Setup
+**Story 1.2: `[Community]` Documentation Site Setup**
 *   **As a** Developer,
 *   **I want** a Docusaurus site to be initialized and deployed,
 *   **so that** we have a live platform for project documentation from day one.
@@ -24,7 +24,7 @@
     3.  A CI/CD workflow is created to automatically deploy the Docusaurus site (e.g., to GitHub Pages or Vercel) on every merge to `main`.
     4.  The live documentation site includes a placeholder "Architecture Overview" page.
 
-### Story 1.3: `[Community]` API Documentation Setup
+**Story 1.3: `[Community]` API Documentation Setup**
 *   **As a** Developer,
 *   **I want** the FastAPI backend to be configured to serve auto-generated OpenAPI documentation using Redocly,
 *   **so that** our API documentation is always in sync with the code.
@@ -33,7 +33,7 @@
     2.  The application serves a visually appealing and user-friendly API doc using Redocly at the `/api/docs` endpoint.
     3.  A basic "health check" endpoint (`/api/v1/health`) is created and appears in the Redocly documentation.
 
-### Story 1.4: `[Community]` Core Database and Services Setup
+**Story 1.4: `[Community]` Core Database and Services Setup**
 *   **As a** Backend Developer,
 *   **I want** the PostgreSQL database and core application services to be set up,
 *   **so that** we have a foundation for storing data and implementing business logic.
