@@ -89,3 +89,4 @@ Thumbs.db
 docs/.docusaurus/
 docs/build/apps/frontend/playwright-report/*
 apps/frontend/test-results/*
+apps/frontend/playwright-report/*
