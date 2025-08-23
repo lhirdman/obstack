@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { HomeIcon, ChartBarIcon, DocumentMagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { authService } from '../services/auth';
 
 interface NavbarProps {
@@ -28,15 +30,45 @@ const Navbar: React.FC<NavbarProps> = ({ onLogout }) => {
     logoutMutation.mutate();
   };
 
+  const location = useLocation();
+
+  const navigation = [
+    { name: 'Dashboard', href: '/', icon: HomeIcon },
+    { name: 'Metrics', href: '/metrics', icon: ChartBarIcon },
+    { name: 'Traces', href: '/traces', icon: DocumentMagnifyingGlassIcon },
+  ];
+
   return (
     <nav className="bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">
+          <div className="flex items-center space-x-8">
+            <Link to="/" className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors">
               ObservaStack
-            </h1>
+            </Link>
+            
+            {/* Navigation Links */}
+            <div className="hidden md:flex space-x-4">
+              {navigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
+          
           <div className="flex items-center">
             <button
               onClick={handleLogout}

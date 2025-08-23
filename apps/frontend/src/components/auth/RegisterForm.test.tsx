@@ -30,7 +30,7 @@ describe('RegisterForm', () => {
   it('renders registration form with all required fields', () => {
     renderWithQueryClient(<RegisterForm />);
     
-    expect(screen.getByText('Create Account')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /create account/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/organization name/i)).toBeInTheDocument();
@@ -51,6 +51,7 @@ describe('RegisterForm', () => {
     
     await user.type(usernameInput, 'testuser');
     await user.type(emailInput, 'test@example.com');
+    await user.clear(tenantInput);
     await user.type(tenantInput, 'test-org');
     await user.type(passwordInput, 'password123');
     await user.type(confirmPasswordInput, 'password123');
@@ -138,6 +139,7 @@ describe('RegisterForm', () => {
     
     await user.type(usernameInput, 'testuser');
     await user.type(emailInput, 'test@example.com');
+    await user.clear(tenantInput);
     await user.type(tenantInput, 'test-org');
     await user.type(passwordInput, 'password123');
     await user.type(confirmPasswordInput, 'password123');
@@ -196,45 +198,31 @@ describe('RegisterForm', () => {
 
   it('prevents submission when passwords do not match', async () => {
     const user = userEvent.setup();
-    const mockOnError = vi.fn();
+    renderWithQueryClient(<RegisterForm />);
     
-    renderWithQueryClient(<RegisterForm onError={mockOnError} />);
-    
-    const usernameInput = screen.getByLabelText(/username/i);
-    const emailInput = screen.getByLabelText(/email address/i);
     const passwordInput = screen.getByLabelText('Password');
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
     
-    await user.type(usernameInput, 'testuser');
-    await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
     await user.type(confirmPasswordInput, 'different123');
-    await user.click(submitButton);
     
-    expect(mockOnError).toHaveBeenCalledWith('Passwords do not match');
+    expect(await screen.findByText('Passwords do not match')).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('prevents submission when password is too short', async () => {
     const user = userEvent.setup();
-    const mockOnError = vi.fn();
+    renderWithQueryClient(<RegisterForm />);
     
-    renderWithQueryClient(<RegisterForm onError={mockOnError} />);
-    
-    const usernameInput = screen.getByLabelText(/username/i);
-    const emailInput = screen.getByLabelText(/email address/i);
     const passwordInput = screen.getByLabelText('Password');
-    const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
     const submitButton = screen.getByRole('button', { name: /create account/i });
     
-    await user.type(usernameInput, 'testuser');
-    await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'short');
-    await user.type(confirmPasswordInput, 'short');
-    await user.click(submitButton);
     
-    expect(mockOnError).toHaveBeenCalledWith('Password must be at least 8 characters long');
+    expect(await screen.findByText('Password must be at least 8 characters long')).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
     expect(mockFetch).not.toHaveBeenCalled();
   });
 

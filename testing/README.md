@@ -18,7 +18,7 @@ This directory contains the complete test environment setup for ObservaStack, pr
 docker compose -f docker-compose.test.yml up -d --build
 
 # Check service health
-curl http://localhost:8080/health
+curl http://localhost:8081/health
 
 # Run all tests
 docker compose -f docker-compose.test.yml --profile test-execution up test-runner
@@ -71,7 +71,7 @@ docker compose -f docker-compose.test.yml up -d --build
 
 # Check all services are healthy
 docker compose -f docker-compose.test.yml ps
-curl http://localhost:8080/health
+curl http://localhost:8081/health
 
 # Stop environment
 docker compose -f docker-compose.test.yml down
@@ -106,6 +106,11 @@ docker compose -f docker-compose.test.yml logs -f
 
 # Restart specific service after changes
 docker compose -f docker-compose.test.yml restart backend
+docker compose -f docker-compose.test.yml restart frontend
+
+# Rebuild and restart service (useful after code changes)
+docker compose -f docker-compose.test.yml up -d --build --no-deps --force-recreate backend
+docker compose -f docker-compose.test.yml up -d --build --no-deps --force-recreate frontend
 
 # Execute interactive shell in test runner
 docker compose -f docker-compose.test.yml exec test-runner bash
@@ -115,18 +120,47 @@ docker compose -f docker-compose.test.yml exec test-runner bash
 
 ```bash
 # Check service health
-curl http://localhost:8080/health | jq '.'
+curl http://localhost:8081/health | jq '.'
 
 # View service logs
 docker compose -f docker-compose.test.yml logs backend
 docker compose -f docker-compose.test.yml logs health-monitor
 
 # Access databases
+# Main application database
 docker compose -f docker-compose.test.yml exec postgres psql -U observastack -d observastack
+
+# Keycloak authentication database
+docker compose -f docker-compose.test.yml exec postgres psql -U keycloak -d keycloak
+
+# Test results database
 docker compose -f docker-compose.test.yml exec test-results-db psql -U test_user -d test_results
 
 # Copy test reports to host
 docker compose -f docker-compose.test.yml cp test-runner:/app/reports ./local-reports
+
+# Test database setup
+chmod +x scripts/test-db-setup.sh
+./scripts/test-db-setup.sh
+```
+
+### Database Setup
+
+The test environment automatically initializes multiple databases:
+
+- **observastack**: Main application database with `observastack` user
+- **keycloak**: Authentication database with `keycloak` user
+- **test_results**: Test results database with `test_user`
+
+The database initialization script ([`scripts/init-db.sql`](scripts/init-db.sql)) runs automatically when PostgreSQL starts and creates the required databases, users, and permissions.
+
+To verify the database setup:
+```bash
+# Make the test script executable (first time only)
+chmod +x scripts/test-db-setup.sh
+
+# Run database setup verification
+./scripts/test-db-setup.sh
 ```
 
 ## Configuration
@@ -174,10 +208,12 @@ testing/
 ├── requirements.test.txt            # Python dependencies for test runner
 ├── requirements.health-monitor.txt  # Python dependencies for health monitor
 ├── package.test.json               # Node.js dependencies for test runner
-├── scripts/                        # Test execution scripts
+├── scripts/                        # Test execution and database scripts
 │   ├── run-all-tests.sh            # Main test execution script
 │   ├── wait-for-services.sh        # Service readiness checker
-│   └── generate-report.py          # Test report generator
+│   ├── generate-report.py          # Test report generator
+│   ├── init-db.sql                 # Database initialization script
+│   └── test-db-setup.sh            # Database setup verification script
 ├── health-monitor/                 # Health monitor application
 │   └── main.py                     # Health monitor service
 └── README.md                       # This file
@@ -227,7 +263,7 @@ jobs:
       - name: Wait for Services
         run: |
           cd testing
-          timeout 300 bash -c 'until curl -f http://localhost:8080/health; do sleep 5; done'
+          timeout 300 bash -c 'until curl -f http://localhost:8081/health; do sleep 5; done'
           
       - name: Run Tests
         run: |

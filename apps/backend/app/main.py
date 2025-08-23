@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.api.v1.health import router as health_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.metrics import router as metrics_router
+from app.api.v1.traces import router as traces_router
 from app.core.error_handling import ErrorHandlingMiddleware
 from app.db.session import init_db
 
@@ -49,6 +50,7 @@ app.add_middleware(ErrorHandlingMiddleware)
 app.include_router(health_router, prefix="/api/v1", tags=["Health"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(metrics_router, prefix="/api/v1/metrics", tags=["Metrics"])
+app.include_router(traces_router, prefix="/api/v1/traces", tags=["Traces"])
 
 @app.get("/api/docs", response_class=HTMLResponse, include_in_schema=False)
 async def redocly_html():

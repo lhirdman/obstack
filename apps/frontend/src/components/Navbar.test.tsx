@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi, describe, it, expect, afterEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import Navbar from './Navbar';
 import { authService } from '../services/auth';
 
@@ -30,7 +31,9 @@ const renderWithQueryClient = (component: React.ReactElement) => {
   const queryClient = createQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      {component}
+      <BrowserRouter>
+        {component}
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };
@@ -101,7 +104,9 @@ describe('Navbar', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <Navbar />
+        <BrowserRouter>
+          <Navbar />
+        </BrowserRouter>
       </QueryClientProvider>
     );
     

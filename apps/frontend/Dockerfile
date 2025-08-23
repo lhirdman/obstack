@@ -28,7 +28,8 @@ COPY package*.json ./
 # Development stage with all dependencies including test tools
 FROM base AS development
 # Install all dependencies (including devDependencies)
-RUN npm ci --include=dev
+# Using npm install instead of npm ci to handle lock file sync issues
+RUN npm install
 
 # Install Playwright browsers for E2E testing
 RUN npx playwright install chromium --with-deps
@@ -67,11 +68,9 @@ RUN npm run test:e2e || echo "E2E tests skipped - requires full stack"
 
 # Production build stage
 FROM base AS build
-# Install only production dependencies first for better caching
-RUN npm ci --only=production && npm cache clean --force
-
-# Install dev dependencies needed for build
-RUN npm ci --include=dev
+# Install all dependencies needed for build (including devDependencies)
+# Using npm install instead of npm ci to handle lock file sync issues
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -112,7 +111,7 @@ server {
 
     # API proxy for development/testing
     location /api/ {
-        proxy_pass http://bff:8000/;
+        proxy_pass http://backend:8000/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -131,9 +130,8 @@ EOF
 # Copy built application
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
+# Create non-root user for security (nginx group already exists in base image)
+RUN adduser -S -D -H -u 1001 -h /var/cache/nginx -s /sbin/nologin -G nginx nginx || true
 
 # Change ownership of nginx directories
 RUN chown -R nginx:nginx /var/cache/nginx && \

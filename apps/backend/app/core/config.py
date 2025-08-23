@@ -66,6 +66,16 @@ class Settings(BaseSettings):
         description="Timeout for Prometheus API requests in seconds"
     )
     
+    # Tempo Configuration
+    tempo_url: str = Field(
+        default="http://localhost:3200",
+        description="Tempo API endpoint URL"
+    )
+    tempo_timeout: int = Field(
+        default=30,
+        description="Timeout for Tempo API requests in seconds"
+    )
+    
     # Environment
     environment: str = Field(
         default="development",

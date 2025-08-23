@@ -24,6 +24,7 @@ services:
       - ENVIRONMENT=test
       - DATABASE_URL=postgresql://observastack:observastack@postgres:5432/observastack
       - TEST_DATABASE_URL=postgresql://test_user:test_password@test-results-db:5432/test_results
+      - JWT_SECRET_KEY=test-secret-key-for-testing-only-not-for-production
       - PROMETHEUS_URL=http://prometheus:9090
       - LOKI_URL=http://loki:3100
       - TEMPO_URL=http://tempo:3200
@@ -38,23 +39,22 @@ services:
       - test-network
     depends_on:
       - postgres
-      - prometheus
-      - loki
-      - tempo
-      - redis
-      - opensearch
-      - redpanda
-      - keycloak
-      - alertmanager
-      - thanos-query
-      - otel-collector
+      - test-results-db
 
   postgres:
     extends:
       file: ../docker-compose.yml
       service: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U observastack -d observastack && pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Observability Stack Services
   prometheus:
@@ -183,14 +183,15 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_DB=postgres
       - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
-      - KC_DB_USERNAME=observastack
-      - KC_DB_PASSWORD=observastack
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
     command: start-dev
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - test-network
 
@@ -209,7 +210,7 @@ services:
       - test-network
 
   thanos-sidecar:
-    image: thanosio/thanos:latest
+    image: thanosio/thanos:v0.39.2
     ports:
       - "10901:10901"
       - "10902:10902"
@@ -227,7 +228,7 @@ services:
       - test-network
 
   thanos-query:
-    image: thanosio/thanos:latest
+    image: thanosio/thanos:v0.39.2
     ports:
       - "10904:10904"
     command:
@@ -303,6 +304,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.health-monitor
+    ports:
+      - "8081:8080"
     environment:
       - SERVICES_TO_MONITOR=frontend:3000,backend:8000,postgres:5432,test-results-db:5432,prometheus:9090,loki:3100,tempo:3200,redpanda:9092,opensearch:9200,redis:6379,grafana:3000,keycloak:8080,alertmanager:9093,thanos-query:10904,otel-collector:8888
       - CHECK_INTERVAL=30
@@ -319,6 +322,7 @@ services:
       retries: 3
 
 volumes:
+  postgres_data:
   test_results_data:
   test_reports:
   prometheus_data:

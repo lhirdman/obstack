@@ -70,7 +70,8 @@ graph TD
         end
 
         subgraph "Observability Backend"
-            Loki[Loki<br>(Logs)]
+            Loki[Loki<br>(Short-Term Logs)]
+            OpenSearch[OpenSearch<br>(Long-Term Logs & Analytics)]
             Prometheus[Prometheus<br>(Metrics)]
             Tempo[Tempo<br>(Traces)]
             OpenCost[OpenCost<br>(Cost)]
@@ -98,9 +99,13 @@ graph TD
     Backend --> Cache
     Backend --> Identity
     Backend --> Loki
+    Backend --> OpenSearch
     Backend --> Prometheus
     Backend --> Tempo
     Backend --> OpenCost
+
+    %% Internal Telemetry Unification
+    Prometheus -- remote_write --> Otel
 
     %% Storage Connections
     Loki --> S3
@@ -110,20 +115,20 @@ graph TD
 
 ## Log Ingestion Pipeline
 
-To ensure a scalable and reliable data pipeline for logs, the architecture includes a streaming data platform (Redpanda) and dedicated collection agents (Vector and the OTEL Collector).
+To ensure a scalable and reliable data pipeline for logs, the architecture utilizes a two-tier storage strategy supported by a streaming data platform.
 
 1.  **Collection:**
-    *   **Vector:** Deployed as a node-level agent, Vector is responsible for collecting logs from system files, syslog, and other non-application sources.
-    *   **OTEL Collector:** Used as a sidecar or gateway, the OTEL Collector receives structured telemetry (logs, metrics, traces) from applications that are instrumented with OpenTelemetry SDKs.
+    *   **Vector & OTEL Collector:** These agents collect logs and telemetry and forward them into the Redpanda streaming platform.
 
 2.  **Streaming:**
-    *   Both Vector and the OTEL Collector forward their data into **Redpanda**, a Kafka-compatible streaming platform. This decouples the collection layer from the processing layer, providing a durable buffer that can handle backpressure and ensure data is not lost.
+    *   **Redpanda (Kafka-compatible):** Acts as a durable buffer, decoupling collection from processing.
 
-3.  **Processing & Storage:**
-    *   The **FastAPI Backend** includes a consumer service that reads from the appropriate topics in Redpanda.
-    *   This service is responsible for parsing, enriching (e.g., adding `tenant_id`), and validating the log data before forwarding it to its final destination, **Loki**, for long-term storage and querying.
+3.  **Processing & Tiered Storage:**
+    *   The **FastAPI Backend** consumes from Redpanda, enriches the data (e.g., adding `tenant_id`), and forwards it to two destinations:
+    *   **Tier 1 (Hot Storage): Loki** is used for short-term storage (7-14 days). Its efficient, index-free design is ideal for fast, recent log queries and for powering dashboards in Grafana.
+    *   **Tier 2 (Warm Storage): OpenSearch** is used for long-term storage (30-90 days). It provides powerful full-text search capabilities for ad-hoc troubleshooting and deeper analysis. This also serves as the foundation for our ML/AI features.
 
-This decoupled pipeline provides a robust foundation for handling high-volume log data, which is critical for the platform's reliability.
+This decoupled, two-tier pipeline provides a robust and cost-effective solution for handling high-volume log data, balancing the need for fast, recent queries with deep, long-term search.
 
 ## Push-Based Telemetry Ingestion
 
@@ -156,6 +161,7 @@ graph TD
             Prometheus[Prometheus]
             Loki[Loki]
             Tempo[Tempo]
+            OpenSearch[OpenSearch]
         end
     end
 
@@ -171,6 +177,7 @@ graph TD
     OtelCollector -- Forwards --> Prometheus
     OtelCollector -- Forwards --> Loki
     OtelCollector -- Forwards --> Tempo
+    OtelCollector -- Forwards --> OpenSearch
 ```
 
 ### Authentication and Multi-Tenancy
@@ -281,3 +288,33 @@ To ensure a fast and responsive user experience, the following performance strat
 *   **Image Optimization:** All static images will be optimized (e.g., converted to WebP) and lazy-loaded using the native `loading="lazy"` attribute.
 *   **Memoization:** To prevent unnecessary re-renders of complex components, we will strategically use `React.memo` for components and the `useMemo` and `useCallback` hooks for expensive calculations and functions.
 *   **Bundling:** Vite's build process, which includes tree-shaking and minification, will be relied upon to produce an optimized production bundle.
+
+## Future Architectural Evolution
+
+To build upon the existing foundation, the platform will be expanded in a phased approach. The following sections outline the proposed architecture for these future capabilities, which are documented in detail in their respective Architectural Decision Records (ADRs).
+
+### Phase 1: Foundational Service Expansion
+
+This phase focuses on adding immediate value by integrating new services that are primarily I/O-bound and can be built using a consistent, containerized backend architecture.
+
+-   **Services:** Synthetic Monitoring, Security & Compliance Scanning, Cloud Cost Management.
+-   **Architecture:** As detailed in **ADR-003** and **ADR-004**, these services will be built as modules within a **Node.js/NestJS** backend. They will be deployed as containers within the primary Kubernetes cluster and will orchestrate external actions (e.g., calling cloud provider APIs or triggering global synthetic runners). This introduces a secondary backend stack optimized for asynchronous, I/O-heavy workloads.
+
+### Phase 2: High-Volume RUM & Analytics Pipeline
+
+This phase introduces a new, high-throughput data pipeline designed to ingest and analyze Real User Monitoring (RUM) and other high-volume analytics data from client-side agents.
+
+-   **Services:** Web Analytics (GA-style), Interaction Heatmaps, Conversion Funnels.
+-   **Proposed Architecture:**
+    -   **Data Collection:** A client-side agent (e.g., **Grafana Faro** or **OpenTelemetry JS SDK**) will capture user interactions and performance metrics.
+    -   **Ingestion:** Data will be sent to a scalable ingestion endpoint (e.g., an **OpenTelemetry Collector** service in the K8s cluster).
+    -   **Buffering:** The collector will forward data to a **Kafka/Redpanda** streaming platform to decouple ingestion from processing.
+    -   **Storage & Processing:** A new stream processing service will consume from the message queue and write the data to a dedicated **ClickHouse** cluster for high-speed analytical querying.
+
+### Phase 3: ML/AI Predictive Features
+
+This phase leverages the rich datasets collected in both the existing observability backend and the new analytics pipeline to provide predictive, AI-driven insights.
+
+-   **Services:** Predictive Resource Scaling, Proactive Anomaly Detection, Outage Prediction.
+-   **Proposed Architecture:** The initial implementation of ML features will **leverage the powerful, built-in Machine Learning capabilities of the existing OpenSearch cluster**. This includes anomaly detection for logs and metrics, log clustering, and forecasting. This approach simplifies the architecture and accelerates the delivery of initial AI-powered features.
+-   For more advanced, future "moonshot" features that may require custom models or data from multiple sources (PostgreSQL, Prometheus, etc.), the platform may be expanded with a dedicated ML platform like **Kubeflow** or **MLflow**. This will be evaluated after the capabilities of the OpenSearch ML framework have been fully utilized.

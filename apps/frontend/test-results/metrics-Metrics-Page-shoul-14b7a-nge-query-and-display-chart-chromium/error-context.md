@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- navigation:
+  - link "ObservaStack":
+    - /url: /
+  - link "Dashboard":
+    - /url: /
+  - link "Metrics":
+    - /url: /metrics
+  - link "Traces":
+    - /url: /traces
+  - button "Logout"
+- heading "Metrics" [level=1]
+- paragraph: Query and visualize metrics from your observability stack
+- heading "Query Configuration" [level=2]
+- text: Query Type
+- radio "Instant Query"
+- text: Instant Query
+- radio "Range Query" [checked]
+- text: Range Query PromQL Query
+- button "Examples"
+- button "Functions"
+- textbox "Enter PromQL query (e.g., up, rate(http_requests_total[5m]))": up
+- text: Press Ctrl+Enter (Cmd+Enter on Mac) to execute the query Query ready to execute
+- heading "Time Range" [level=3]
+- text: Quick Ranges
+- button "5m"
+- button "15m"
+- button "30m"
+- button "1h"
+- button "3h"
+- button "6h"
+- button "12h"
+- button "24h"
+- text: Start Time
+- textbox: 2025-08-23T08:40
+- text: End Time
+- textbox: 2025-08-23T09:40
+- text: Resolution (Step)
+- button "5s"
+- button "15s"
+- button "30s"
+- button "1m"
+- button "5m"
+- button "15m"
+- button "30m"
+- button "1h"
+- text: "Duration: 60 minutes • Step: 15s"
+- button "Execute Query"
+- heading "Results" [level=2]
+- text: "Last updated: 9:40:21 AM"
+- heading "Query Results Summary" [level=4]
+- text: Result Type:matrix Series Count:1 Data Points:3 Status:success
+```
