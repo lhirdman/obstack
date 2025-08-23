@@ -5,40 +5,47 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: 'otel-collector'
-          scrape_interval: 10s
-          static_configs:
-            - targets: ['0.0.0.0:8888']
 
 processors:
   batch:
 
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
 exporters:
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-  loki:
-    endpoint: http://loki:3100/loki/api/v1/push
+  # Exporter for Traces to Tempo
   otlp/tempo:
-    endpoint: http://tempo:3200
+    endpoint: "tempo:4317"
     tls:
       insecure: true
-  logging:
-    loglevel: debug
+
+  # Exporter for Logs to Loki using OTLP
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp/v1/logs"
+    tls:
+      insecure: true
+
+  # Exporter for Metrics to Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  # Debug exporter for troubleshooting
+  debug:
+    verbosity: detailed
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/tempo, logging]
+      exporters: [otlp/tempo, debug]
     metrics:
-      receivers: [otlp, prometheus]
+      receivers: [otlp]
       processors: [batch]
-      exporters: [prometheus, logging]
+      exporters: [prometheus, debug]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [loki, logging]
+      exporters: [otlphttp/loki, debug]
+  extensions: [health_check]

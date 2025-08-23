@@ -1,0 +1,8 @@
+# provisioning/datasources/15-thanos.yaml
+apiVersion: 1
+datasources:
+  - name: Thanos
+    uid: thanos
+    type: prometheus
+    access: proxy
+    url: http://thanos-query:10904

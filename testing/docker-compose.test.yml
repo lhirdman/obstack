@@ -1,24 +1,36 @@
 version: '3.8'
 
-# Test environment Docker Compose configuration
-# Extends the main docker-compose.yml with additional test services
+# A standalone, self-contained Docker Compose configuration for the test environment.
+# This file includes all services required for a full E2E test run.
 
 services:
-  # Extend existing services with test-specific configurations
   frontend:
-    extends:
-      file: ../docker-compose.yml
-      service: frontend
+    build:
+      context: ../apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=test
       - VITE_API_BASE_URL=http://backend:8000
+      - VITE_AUTH_METHOD=keycloak
+      - VITE_KEYCLOAK_URL=http://keycloak:8080
+      - VITE_KEYCLOAK_REALM=observastack
+      - VITE_KEYCLOAK_CLIENT_ID=observastack-frontend
+    volumes:
+      - ../apps/frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
     networks:
       - test-network
 
   backend:
-    extends:
-      file: ../docker-compose.yml
-      service: backend
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=test
@@ -35,26 +47,33 @@ services:
       - ALERTMANAGER_URL=http://alertmanager:9093
       - THANOS_QUERY_URL=http://thanos-query:10904
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-    networks:
-      - test-network
+    volumes:
+      - ../apps/backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       - postgres
       - test-results-db
+    networks:
+      - test-network
 
   postgres:
-    extends:
-      file: ../docker-compose.yml
-      service: postgres
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=observastack
+      - POSTGRES_USER=observastack
+      - POSTGRES_PASSWORD=observastack
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - test-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U observastack -d observastack && pg_isready -U keycloak -d keycloak"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - test-network
 
   # Observability Stack Services
   prometheus:
@@ -87,6 +106,7 @@ services:
 
   tempo:
     image: grafana/tempo:latest
+    user: "root"
     ports:
       - "3200:3200"
       - "14268:14268"  # jaeger ingest
@@ -123,6 +143,7 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:latest
+    hostname: opensearch-node1
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
@@ -170,12 +191,11 @@ services:
       - prometheus
       - loki
       - tempo
-
     networks:
       - test-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:22.0
+    image: quay.io/keycloak/keycloak:26.3
     ports:
       - "8080:8080"
     environment:
@@ -188,6 +208,8 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_HOSTNAME_STRICT_HTTPS=false
       - KC_HTTP_ENABLED=true
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
     command: start-dev
     depends_on:
       postgres:
@@ -234,7 +256,7 @@ services:
     command:
       - 'query'
       - '--http-address=0.0.0.0:10904'
-      - '--store=thanos-sidecar:10901'
+      - '--endpoint=thanos-sidecar:10901'
     depends_on:
       - thanos-sidecar
     networks:
@@ -304,14 +326,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.health-monitor
+    restart: unless-stopped
     ports:
       - "8081:8080"
     environment:
-      - SERVICES_TO_MONITOR=frontend:3000,backend:8000,postgres:5432,test-results-db:5432,prometheus:9090,loki:3100,tempo:3200,redpanda:9092,opensearch:9200,redis:6379,grafana:3000,keycloak:8080,alertmanager:9093,thanos-query:10904,otel-collector:8888
+      - SERVICES_TO_MONITOR=frontend:3000,backend:8000,prometheus:9090,loki:3100,tempo:3200,redpanda:9644,opensearch:9200,grafana:3000,redis:6379,keycloak:9000,alertmanager:9093,thanos-query:10904,otel-collector:13133
+      - DATABASE_URLS_TO_MONITOR=postgres|postgresql://observastack:observastack@postgres:5432/observastack,test-results-db|postgresql://test_user:test_password@test-results-db:5432/test_results
       - CHECK_INTERVAL=30
-      - HEALTH_DB_URL=postgresql://test_user:test_password@test-results-db:5432/test_results
     depends_on:
       test-results-db:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     networks:
       - test-network

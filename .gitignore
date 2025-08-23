@@ -87,4 +87,5 @@ Thumbs.db
 
 # Docs output
 docs/.docusaurus/
-docs/build/
+docs/build/apps/frontend/playwright-report/*
+apps/frontend/test-results/*

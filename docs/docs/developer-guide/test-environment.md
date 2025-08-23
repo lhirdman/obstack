@@ -49,11 +49,11 @@ The health monitor provides real-time status of all services:
 
 ```bash
 # Check overall health
-curl http://localhost:8080/health
+curl http://localhost:8081/health
 
 # Check specific service health
-curl http://localhost:8080/health/frontend
-curl http://localhost:8080/health/backend
+curl http://localhost:8081/health/frontend
+curl http://localhost:8081/health/backend
 ```
 
 ### 3. Run Tests
